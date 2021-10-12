@@ -1,0 +1,110 @@
+<ul class="nav nav-tabs">
+  {{#if details.agents.length}}
+    <li class="nav-item">
+      <a
+        {{action "changeTab" "endpoints"}}
+        class="nav-link {{if (or (eq activeTab "endpoints") (not activeTab)) "active"}}"
+        href="#"
+      >
+        Endpoints
+      </a>
+    </li>
+  {{/if}}
+  {{#if details.threats.length}}
+    <li class="nav-item">
+      <a
+        {{action "changeTab" "threats"}}
+        class="nav-link {{if (eq activeTab "threats") "active"}}"
+        href="#"
+      >
+        Threats
+      </a>
+    </li>
+  {{/if}}
+</ul>
+{{#if (eq activeTab "endpoints")}}
+  <div class="list">
+    {{#each details.agents as |agent agentIndex|}}
+      {{#if (gt agentIndex 0)}}
+        <hr />
+      {{/if}}
+      {{#each-in agent as |label content|}}
+      {{@index}}
+        <div>
+          <span class="p-key">{{label}}: </span>
+          <span class="p-value">
+            {{#if content.date}}
+              {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
+            {{/if}}
+            {{#if content.capitalize}}
+              {{capitalize content.value}}
+            {{/if}}
+            {{#if content.link}}
+              <a class="p-link" href="{{content.link}}">
+                {{content.value}}
+                {{fa-icon "external-link-square" class="external-link-icon"}}
+              </a>
+            {{/if}}
+            {{#if (not (or content.date content.capitalize content.link))}}
+              {{content.value}}
+            {{/if}}
+          </span>
+        </div>
+      {{/each-in}}
+    {{/each}}
+  </div>
+{{/if}}
+{{#if (eq activeTab "threats")}}
+  <div class="list">
+    {{#each details.threats as |threat threatIndex|}}
+      {{#if (gt threatIndex 0)}}
+        <hr />
+      {{/if}}
+      {{#each-in threat as |label content|}}
+        {{#if content.first}}
+          <h1 class="title">
+            <span class="p-key">{{label}}: </span>
+            <span class="p-value">
+              {{#if content.date}}
+                {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
+              {{/if}}
+              {{#if content.capitalize}}
+                {{capitalize content.value}}
+              {{/if}}
+              {{#if content.link}}
+                <a class="p-link" href="{{content.link}}">
+                  {{content.value}}
+                  {{fa-icon "external-link-square" class="external-link-icon"}}
+                </a>
+              {{/if}}
+              {{#if (not (or content.date content.capitalize content.link))}}
+                {{content.value}}
+              {{/if}}
+            </span>
+          </h1>
+        {{else}}
+          <div>
+            <span class="p-key">{{label}}: </span>
+            <span class="p-value">
+              {{#if content.date}}
+                {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
+              {{/if}}
+              {{#if content.capitalize}}
+                {{capitalize content.value}}
+              {{/if}}
+              {{#if content.link}}
+                <a class="p-link" href="{{content.link}}">
+                  {{content.value}}
+                  {{fa-icon "external-link-square" class="external-link-icon"}}
+                </a>
+              {{/if}}
+              {{#if (not (or content.date content.capitalize content.link))}}
+                {{content.value}}
+              {{/if}}
+            </span>
+          </div>
+        {{/if}}
+      {{/each-in}}
+    {{/each}}
+  </div>
+{{/if}}

@@ -1,7 +1,9 @@
 const fp = require('lodash/fp');
 
-const { splitOutIgnoredIps } = require('./dataTransformations');
+const { splitOutIgnoredIps,objectPromiseAll } = require('./dataTransformations');
 const createLookupResults = require('./createLookupResults');
+const queryAgents = require('./queryAgents');
+const queryThreats = require('./queryThreats');
 
 const getLookupResults = async (entities, options, requestWithDefaults, Logger) => {
 
@@ -14,7 +16,7 @@ const getLookupResults = async (entities, options, requestWithDefaults, Logger) 
     Logger
   );
 
-  const lookupResults = createLookupResults(foundEntities, Logger);
+  const lookupResults = createLookupResults(foundEntities, options, Logger);
 
   return lookupResults.concat(ignoredIpLookupResults);
 };
@@ -27,8 +29,13 @@ const _getFoundEntities = async (
 ) =>
   Promise.all(
     fp.map(async (entity) => {
-      const result = 0
-      return { entity, result };
+      const { foundAgents, foundThreats } = await objectPromiseAll({
+        foundAgents: async () =>
+          await queryAgents(entity, options, requestWithDefaults, Logger),
+        foundThreats: async () =>
+          await queryThreats(entity, options, requestWithDefaults, Logger)
+      });
+      return { entity, foundAgents, foundThreats };
     }, entitiesPartition)
   );
 

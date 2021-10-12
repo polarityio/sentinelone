@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const { keys, values, zipObject, map } = require('lodash/fp');
 
 
 const { IGNORED_IPS } = require('./constants');
@@ -41,9 +42,17 @@ const splitOutIgnoredIps = (_entitiesPartition) => {
   };
 };
 
+const objectPromiseAll = async (obj = { fn1: async () => {} }) => {
+  const labels = keys(obj);
+  const functions = values(obj);
+  const executedFunctions = await Promise.all(map((func) => func(), functions));
+
+  return zipObject(labels, executedFunctions);
+};
 
 module.exports = {
   getKeys,
   groupEntities,
   splitOutIgnoredIps,
+  objectPromiseAll
 };

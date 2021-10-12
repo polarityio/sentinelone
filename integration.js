@@ -20,11 +20,9 @@ const doLookup = async (entities, options, cb) => {
   try {
     lookupResults = await getLookupResults(entities, options, requestWithDefaults, Logger);
   } catch (error) {
-    Logger.error({ error }, 'Get Lookup Results Failed');
-    return cb({
-      detail: error.message || 'Command Failed',
-      err: JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)))
-    });
+    const err = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    Logger.error({ error, formattedError: err }, 'Get Lookup Results Failed');
+    return cb({ detail: error.message || 'Command Failed', err });
   }
 
   Logger.trace({ lookupResults }, 'Lookup Results');
