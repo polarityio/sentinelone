@@ -3,6 +3,7 @@ const fp = require('lodash/fp');
 
 const validateOptions = require('./src/validateOptions');
 const createRequestWithDefaults = require('./src/createRequestWithDefaults');
+const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
 
 const { getLookupResults } = require('./src/getLookupResults');
 
@@ -30,8 +31,15 @@ const doLookup = async (entities, options, cb) => {
 };
 
 
+const getOnMessage = { connectOrDisconnectEndpoint };
+
+const onMessage = ({ action, data: actionParams }, options, callback) =>
+  getOnMessage[action](actionParams, options, requestWithDefaults, callback, Logger);
+
+
 module.exports = {
-  doLookup,
   startup,
-  validateOptions
+  validateOptions,
+  doLookup,
+  onMessage
 };

@@ -26,11 +26,15 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   },
   {
     label: 'EndPoint IPv4 Address',
-    path: 'agentDetectionInfo.agentIpV4',
+    path: 'agentDetectionInfo.agentIpV4'
   },
   {
     label: 'EndPoint IPv6 Address',
-    path: 'agentDetectionInfo.agentIpV6',
+    path: 'agentDetectionInfo.agentIpV6'
+  },
+  {
+    label: 'External IP Address',
+    path: 'agentDetectionInfo.externalIp'
   },
   { label: 'Reported Time', path: 'threatInfo.createdAt', date: true },
   { label: 'Identifying Time', path: 'threatInfo.identifiedAt', date: true },
@@ -92,62 +96,67 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Pod Name',
     path: 'kubernetesInfo.pod',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Pod Label',
     path: 'kubernetesInfo.podLabels',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Namespace Name',
     path: 'kubernetesInfo.namespace',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Controller Type',
     path: 'kubernetesInfo.namespaceLabels',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Controller Name',
     path: 'kubernetesInfo.controllerName',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Node Name',
     possiblePaths: ['kubernetesInfo.node.name', 'kubernetesInfo.node'],
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Node Label',
     possiblePaths: ['kubernetesInfo.node.labels', 'kubernetesInfo.node'],
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Cluster Name',
     possiblePaths: ['kubernetesInfo.cluster.name', 'kubernetesInfo.cluster'],
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Container ID',
     path: 'containerInfo.id',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Container Name',
     path: 'containerInfo.name',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   },
   {
     label: 'Container Image',
     path: 'containerInfo.image',
-    process: defaultNaProcess,
+    process: defaultNaProcess
   }
 ];
 
 const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
-  { label: 'Endpoint Name', path: 'computerName' },
+  {
+    label: 'Endpoint Name',
+    path: 'computerName',
+    link: ({ computerName, url }) =>
+      `${url}/sentinels/devices?page=1&filter={"computerName__contains":"\"${computerName}\""}`
+  },
   { label: 'Account', path: 'accountName' },
   { label: 'Site', path: 'siteName' },
   { label: 'Last Logged In User', path: 'lastLoggedInUserName', capitalize: true },
@@ -163,7 +172,7 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
     process: (infected) => (infected ? 'Infected' : 'Healthy')
   },
   { label: 'Device Type', path: 'machineType', capitalize: true },
-  { label: 'OS', path: 'osType' },
+  { label: 'OS', path: 'osType', capitalize: true },
   { label: 'OS Version', path: 'osName', capitalize: true },
   { label: 'Architecture', path: 'osArch' },
   {
@@ -229,7 +238,9 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   },
   {
     label: 'Agent Operational State',
-    path: 'operationalState'
+    path: 'operationalState',
+    process: (operationalState) =>
+      operationalState === 'na' ? 'Not disabled' : operationalState
   },
 
   {

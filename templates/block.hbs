@@ -29,27 +29,86 @@
         <hr />
       {{/if}}
       {{#each-in agent as |label content|}}
-      {{@index}}
-        <div>
-          <span class="p-key">{{label}}: </span>
-          <span class="p-value">
-            {{#if content.date}}
-              {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
-            {{/if}}
-            {{#if content.capitalize}}
-              {{capitalize content.value}}
-            {{/if}}
-            {{#if content.link}}
-              <a class="p-link" href="{{content.link}}">
+        {{#if content.first}}
+          <h1 class="title">
+            <span class="p-key">{{label}}:</span>
+            <span class="p-value">
+              {{#if content.date}}
+                {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
+              {{/if}}
+              {{#if content.capitalize}}
+                {{capitalize content.value}}
+              {{/if}}
+              {{#if content.link}}
+                <a class="p-link" href="{{content.link}}">
+                  {{content.value}}
+                  {{fa-icon "external-link-square" class="external-link-icon"}}
+                </a>
+              {{/if}}
+              {{#if (not (or content.date content.capitalize content.link))}}
                 {{content.value}}
-                {{fa-icon "external-link-square" class="external-link-icon"}}
-              </a>
+              {{/if}}
+            </span>
+          </h1>
+          <div class='message-button-container'>
+            <div class="d-flex flex-row align-items-center">
+              {{#if (eq agent.networkStatus "Unknown")}}
+                <p>
+                  To enable network Connection or Disconnection Actions in this integration on this Endpoint,
+                  enable "Network Status" in the "Endpoint Display Fields" user option, and re-search this entity.
+                </p>
+              {{else}}
+                <button
+                  {{action "connectOrDisconnectEndpoint" agent agentIndex}}
+                  class="p-btn btn btn-light mt-1"
+                  disabled={{or (get connectOrDisconnectIsRunning agentIndex) (get connectOrDisconnectMessages agentIndex) (get connectOrDisconnectErrorMessages agentIndex)}}
+                >
+                  {{#if (get connectOrDisconnectIsRunning agentIndex)}}
+                    {{fa-icon "spinner-third" fixedWidth=true spin=true}}
+                  {{/if}}
+                  {{#if (eq agent.networkStatus "connected")}}
+                    Isolate/Disconnect
+                  {{else}}
+                    Connect to Network
+                  {{/if}}
+                </button>
+              {{/if}}
+            </div>
+            {{#if (get connectOrDisconnectMessages agentIndex)}}
+              <div class="alert alert-info mt-1">
+                {{get connectOrDisconnectMessages agentIndex}}
+              </div>
             {{/if}}
-            {{#if (not (or content.date content.capitalize content.link))}}
-              {{content.value}}
+            {{#if (get connectOrDisconnectErrorMessages agentIndex)}}
+              <div class="alert alert-danger mt-1">
+                {{get connectOrDisconnectErrorMessages agentIndex}}
+              </div>
             {{/if}}
-          </span>
-        </div>
+          </div>
+        {{else}}
+          {{#if (not (or (eq label 'networkStatus') (eq label 'id')))}}
+            <div>
+              <span class="p-key">{{label}}: </span>
+              <span class="p-value">
+                {{#if content.date}}
+                  {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
+                {{/if}}
+                {{#if content.capitalize}}
+                  {{capitalize content.value}}
+                {{/if}}
+                {{#if content.link}}
+                  <a class="p-link" href="{{content.link}}">
+                    {{content.value}}
+                    {{fa-icon "external-link-square" class="external-link-icon"}}
+                  </a>
+                {{/if}}
+                {{#if (not (or content.date content.capitalize content.link))}}
+                  {{content.value}}
+                {{/if}}
+              </span>
+            </div>
+          {{/if}}
+        {{/if}}
       {{/each-in}}
     {{/each}}
   </div>
@@ -63,7 +122,7 @@
       {{#each-in threat as |label content|}}
         {{#if content.first}}
           <h1 class="title">
-            <span class="p-key">{{label}}: </span>
+            <span class="p-key">{{label}}:</span>
             <span class="p-value">
               {{#if content.date}}
                 {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}

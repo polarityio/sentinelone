@@ -1,4 +1,4 @@
-const { flow, map, get, reduce, size, compact, find, __ } = require('lodash/fp');
+const { flow, map, get, reduce, size, compact, find, __, filter } = require('lodash/fp');
 const {
   ENDPOINT_DISPLAY_FIELD_PROCESSING,
   THREAT_DISPLAY_FIELD_PROCESSING
@@ -33,7 +33,27 @@ const createLookupResults = (foundEntities, options, Logger) =>
     compact
   )(foundEntities);
 
-const createSummary = (result) => [];
+const createSummary = ({ threats, agents }) => {
+  const unresolvedThreatsCount = flow(
+    filter((threat) => threat['Incident Status'].value === 'Unresolved'),
+    size
+  )(threats);
+
+  const malicousThreatsCount = flow(
+    filter((threat) => threat['AI Confidence Level'].value === 'Undefined'),
+    size
+  )(threats);
+
+  const unhealthyEndpoints = flow(
+    filter((agent) => agent['Health Status'].value !== 'Healthy'),
+    size
+  )(agents);
+
+  return []
+    .concat(unresolvedThreatsCount ? `Unresolved Threats: ${unresolvedThreatsCount}` : [])
+    .concat(malicousThreatsCount ? `Malicous Threats: ${malicousThreatsCount}` : [])
+    .concat(unhealthyEndpoints ? `Unhealthy Endpoints: ${unhealthyEndpoints}` : []);
+};
 
 const formatQueryResult = (foundAgents, foundThreats, options) => {
   const selectedEndpointProcessingFields = flow(
@@ -51,8 +71,17 @@ const formatQueryResult = (foundAgents, foundThreats, options) => {
   )(options);
 
   return {
-    agents: getDisplayFieldsFromOptions(foundAgents, selectedEndpointProcessingFields, options),
-    threats: getDisplayFieldsFromOptions(foundThreats, selectedThreatProcessingFields, options)
+    agents: getDisplayFieldsFromOptions(
+      foundAgents,
+      selectedEndpointProcessingFields,
+      options
+    ),
+    threats: getDisplayFieldsFromOptions(
+      foundThreats,
+      selectedThreatProcessingFields,
+      options
+    ),
+    unformattedAgents: foundAgents
   };
 };
 

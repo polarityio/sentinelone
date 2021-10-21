@@ -1,7 +1,8 @@
-const { getOr } = require('lodash/fp');
+const { getOr, uniqBy } = require('lodash/fp');
 
 const queryThreats = async (
   entity,
+  [currentAgent, ...foundAgents],
   options,
   requestWithDefaults,
   Logger,
@@ -15,7 +16,9 @@ const queryThreats = async (
       method: 'GET',
       url: `${options.url}/web/api/v2.1/threats`,
       qs: {
-        ...(nextCursor ? { cursor: nextCursor } : { query: entity.value }),
+        ...(nextCursor
+          ? { cursor: nextCursor }
+          : { query: getOr(entity.value, 'computerName', currentAgent) }),
         limit: 100
       },
       headers: {
@@ -29,6 +32,7 @@ const queryThreats = async (
   if (pagination.nextCursor) {
     return await queryThreats(
       entity,
+      currentAgent ? [currentAgent].concat(foundAgents || []) : [],
       options,
       requestWithDefaults,
       Logger,
@@ -37,7 +41,19 @@ const queryThreats = async (
     );
   }
 
-  return foundThreats;
+  if (currentAgent) {
+    return await queryThreats(
+      entity,
+      foundAgents,
+      options,
+      requestWithDefaults,
+      Logger,
+      pagination.nextCursor,
+      foundThreats
+    );
+  }
+  
+  return uniqBy('id', foundThreats);
 };
 
 module.exports = queryThreats;

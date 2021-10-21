@@ -85,6 +85,7 @@ const ALL_THREAT_DISPLAY_FIELDS = [
   { display: 'Endpoints', value: 'Endpoints' },
   { display: 'EndPoint IPv4 Address', value: 'EndPoint IPv4 Address' },
   { display: 'EndPoint IPv6 Address', value: 'EndPoint IPv6 Address' },
+  { display: 'External IP Address', value: 'External IP Address' },
   { display: 'Reported Time', value: 'Reported Time' },
   { display: 'Identifying Time', value: 'Identifying Time' },
   { display: 'Detecting Engine', value: 'Detecting Engine' },
