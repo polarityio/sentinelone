@@ -13,7 +13,8 @@ const createLookupResults = (foundEntities, options, Logger) =>
         const formattedQueryResult = formatQueryResult(
           foundAgents,
           foundThreats,
-          options
+          options,
+          Logger
         );
         lookupResult = {
           entity,
@@ -35,17 +36,20 @@ const createLookupResults = (foundEntities, options, Logger) =>
 
 const createSummary = ({ threats, agents }) => {
   const unresolvedThreatsCount = flow(
-    filter((threat) => threat['Incident Status'].value === 'Unresolved'),
+    filter((threat) => get(`['Incident Status'].value`, threat) === 'Unresolved'),
     size
   )(threats);
 
   const malicousThreatsCount = flow(
-    filter((threat) => threat['AI Confidence Level'].value === 'Undefined'),
+    filter((threat) => get(`['AI Confidence Level'].value`, threat) === 'Undefined'),
     size
   )(threats);
 
   const unhealthyEndpoints = flow(
-    filter((agent) => agent['Health Status'].value !== 'Healthy'),
+    filter(
+      (agent) =>
+        get(`['Health Status'].value`, agent) !== 'Healthy'
+    ),
     size
   )(agents);
 
@@ -55,7 +59,7 @@ const createSummary = ({ threats, agents }) => {
     .concat(unhealthyEndpoints ? `Unhealthy Endpoints: ${unhealthyEndpoints}` : []);
 };
 
-const formatQueryResult = (foundAgents, foundThreats, options) => {
+const formatQueryResult = (foundAgents, foundThreats, options, Logger) => {
   const selectedEndpointProcessingFields = flow(
     get('endpointFieldsToDisplay'),
     map(({ value }) =>
@@ -81,7 +85,8 @@ const formatQueryResult = (foundAgents, foundThreats, options) => {
       selectedThreatProcessingFields,
       options
     ),
-    unformattedAgents: foundAgents
+    unformattedAgents: foundAgents,
+    unformattedThreats: foundThreats
   };
 };
 

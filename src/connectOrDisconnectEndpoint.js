@@ -11,7 +11,9 @@ const connectOrDisconnectEndpoint = async (
     await requestWithDefaults({
       method: 'POST',
       url: `${options.url}/web/api/v2.1/agents/actions/${
-        networkStatus === 'connected' ? 'disconnect' : 'connect'
+        networkStatus === 'connected' || networkStatus === 'connecting'
+          ? 'disconnect'
+          : 'connect'
       }`,
       headers: {
         Authorization: `ApiToken ${options.apiToken}`,
@@ -22,7 +24,10 @@ const connectOrDisconnectEndpoint = async (
     });
 
     callback(null, {
-      networkStatus: networkStatus === 'connected' ? 'disconnected' : 'connected'
+      networkStatus:
+        networkStatus === 'connected' || networkStatus === 'connecting'
+          ? 'disconnecting'
+          : 'connecting'
     });
   } catch (error) {
     const err = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
@@ -43,13 +48,15 @@ const connectOrDisconnectEndpoint = async (
         code: error.status
       },
       'errors.0',
-      JSON.parse(err.description)
+      err.description && err.description[0] === '{'
+        ? JSON.parse(err.description)
+        : err.description
     );
     return callback({
       errors: [
         {
           err: error,
-          detail: `${title}${detail? ` - ${detail}`: ''}, Code: ${code}`
+          detail: `${title}${detail ? ` - ${detail}` : ''}, Code: ${code}`
         }
       ]
     });

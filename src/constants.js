@@ -1,3 +1,5 @@
+const { map, flow, get, filter, join, capitalize, eq } = require('lodash/fp');
+
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
 const yesNoProcess = (x) => (x ? 'Yes' : 'No');
@@ -52,8 +54,25 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
     label: 'Completed Actions',
     path: 'mitigationStatus',
     process: (mitigationStatuses) =>
-      (mitigationStatuses.find(({ status }) => status === 'success') || {}).action,
-    capitalize: true
+      flow(
+        filter(flow(get('status'), eq('success'))),
+        map(flow(get('action'), capitalize)),
+        join(', ')
+      )(mitigationStatuses)
+  },
+  {
+    label: 'Found in Blocklist',
+    path: 'blocklistInfo',
+    process: (blocklistInfo) =>
+      blocklistInfo && blocklistInfo.length ? `Yes (${blocklistInfo.length})` : 'No'
+  },
+  {
+    label: 'Blocklist Scope',
+    path: 'blocklistInfo',
+    process: (blocklistInfo) =>
+      blocklistInfo && blocklistInfo.length
+        ? flow(map(flow(get('scopeName'), capitalize)), join(', '))(blocklistInfo)
+        : undefined
   },
   {
     label: 'Pending Actions',

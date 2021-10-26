@@ -99,6 +99,9 @@ const ALL_THREAT_DISPLAY_FIELDS = [
   { display: 'Hash', value: 'Hash' },
   { display: 'Path', value: 'Path' },
   { display: 'Completed Actions', value: 'Completed Actions' },
+  { display: 'Found in Blocklist', value: 'Found in Blocklist' },
+  { display: 'Blocklist Scope', value: 'Blocklist Scope' },
+
   { display: 'Pending Actions', value: 'Pending Actions' },
   { display: 'Reboot Required', value: 'Reboot Required' },
   { display: 'Failed Actions', value: 'Failed Actions' },
@@ -139,6 +142,8 @@ const DEFAULT_THREAT_DISPLAY_FIELDS = [
   { display: 'Hash', value: 'Hash' },
   { display: 'Path', value: 'Path' },
   { display: 'Completed Actions', value: 'Completed Actions' },
+  { display: 'Found in Blocklist', value: 'Found in Blocklist' },
+  { display: 'Blocklist Scope', value: 'Blocklist Scope' },
   { display: 'Pending Actions', value: 'Pending Actions' },
   { display: 'Reboot Required', value: 'Reboot Required' },
   { display: 'Failed Actions', value: 'Failed Actions' },

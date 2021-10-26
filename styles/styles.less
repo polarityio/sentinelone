@@ -22,12 +22,6 @@
 
   flex-direction: row;
   align-items: center;
-  & p {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    font-style: italic;
-    color: darkgray;
-  }
   & button {
     margin-right: 10px;
     margin-top: 0;
@@ -45,5 +39,23 @@
   }
   & .alert {
     margin-bottom: 4px !important;
+  }
+}
+
+.enable-action-message {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-style: italic;
+  color: darkgray;
+}
+
+.select-container {
+  display: flex;
+  align-items: center;
+  padding-top: 2px;
+  padding-bottom: 0px;
+
+  .p-value {
+    min-width: 110px;
   }
 }

@@ -6,7 +6,7 @@
         class="nav-link {{if (or (eq activeTab "endpoints") (not activeTab)) "active"}}"
         href="#"
       >
-        Endpoints
+        Endpoints ({{details.agents.length}})
       </a>
     </li>
   {{/if}}
@@ -17,7 +17,7 @@
         class="nav-link {{if (eq activeTab "threats") "active"}}"
         href="#"
       >
-        Threats
+        Threats ({{details.threats.length}})
       </a>
     </li>
   {{/if}}
@@ -50,11 +50,11 @@
               {{/if}}
             </span>
           </h1>
-          <div class='message-button-container'>
+          <div class="message-button-container">
             <div class="d-flex flex-row align-items-center">
               {{#if (eq agent.networkStatus "Unknown")}}
-                <p>
-                  To enable network Connection or Disconnection Actions in this integration on this Endpoint,
+                <p class="enable-action-message">
+                  To enable Network Connection or Disconnection Actions in this integration on this Endpoint,
                   enable "Network Status" in the "Endpoint Display Fields" user option, and re-search this entity.
                 </p>
               {{else}}
@@ -66,7 +66,7 @@
                   {{#if (get connectOrDisconnectIsRunning agentIndex)}}
                     {{fa-icon "spinner-third" fixedWidth=true spin=true}}
                   {{/if}}
-                  {{#if (eq agent.networkStatus "connected")}}
+                  {{#if (or (eq agent.networkStatus "connected") (eq agent.networkStatus "connecting"))}}
                     Isolate/Disconnect
                   {{else}}
                     Connect to Network
@@ -86,7 +86,7 @@
             {{/if}}
           </div>
         {{else}}
-          {{#if (not (or (eq label 'networkStatus') (eq label 'id')))}}
+          {{#if (not (or (eq label "networkStatus") (eq label "id")))}}
             <div>
               <span class="p-key">{{label}}: </span>
               <span class="p-value">
@@ -141,27 +141,68 @@
               {{/if}}
             </span>
           </h1>
+          {{#if (and (eq threat.blocklistScope "Unknown") (not (eq (get threat "Found in Blocklist") "No")))}}
+            <p class="enable-action-message">
+              To enable Adding Threats to the Blocklist in this integration on this threat,
+              enable "Found in Blocklist" and "Blocklist Scope" in the "Threat Display Fields" user option, and re-search this entity.
+            </p>
+          {{else}}
+            <div class="select-container pt-1">
+              <span class="p-value">Blocking Scope: </span>
+              <select class="w-100" onchange={{action "setBlockingScope" threatIndex}} disabled={{interactionDisabled}}>
+                <option value="site">Site</option>
+                <option value="group">Group</option>
+                <option value="account">Account</option>
+              </select>
+            </div>
+            <div class="message-button-container">
+              <div class="d-flex flex-row align-items-center">
+                <button
+                  {{action "addThreatToBlocklist" threat threatIndex}}
+                  class="p-btn btn btn-light mt-1"
+                  disabled={{or (get blockingIsRunning threatIndex) (get blockingMessages threatIndex) (get blockingErrorMessages threatIndex)}}
+                >
+                  {{#if (get blockingIsRunning threatIndex)}}
+                    {{fa-icon "spinner-third" fixedWidth=true spin=true}}
+                  {{/if}}
+                  Add to Blocklist
+                </button>
+              </div>
+              {{#if (get blockingMessages threatIndex)}}
+                <div class="alert alert-info mt-1">
+                  {{get blockingMessages threatIndex}}
+                </div>
+              {{/if}}
+              {{#if (get blockingErrorMessages threatIndex)}}
+                <div class="alert alert-danger mt-1">
+                  {{get blockingErrorMessages threatIndex}}
+                </div>
+              {{/if}}
+            </div>
+          {{/if}}
         {{else}}
-          <div>
-            <span class="p-key">{{label}}: </span>
-            <span class="p-value">
-              {{#if content.date}}
-                {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
-              {{/if}}
-              {{#if content.capitalize}}
-                {{capitalize content.value}}
-              {{/if}}
-              {{#if content.link}}
-                <a class="p-link" href="{{content.link}}">
+          {{#if (not (or (eq label "id") (eq label "blocklistScope") (eq label "numberOfBlocklistItems")))}}
+            <div>
+              <span class="p-key">{{label}}: </span>
+              <span class="p-value">
+                {{#if content.date}}
+                  {{moment-format content.value "MM/DD/YYYY HH:mm:ss" timeZone=timezone}}
+                {{/if}}
+                {{#if content.capitalize}}
+                  {{capitalize content.value}}
+                {{/if}}
+                {{#if content.link}}
+                  <a class="p-link" href="{{content.link}}">
+                    {{content.value}}
+                    {{fa-icon "external-link-square" class="external-link-icon"}}
+                  </a>
+                {{/if}}
+                {{#if (not (or content.date content.capitalize content.link))}}
                   {{content.value}}
-                  {{fa-icon "external-link-square" class="external-link-icon"}}
-                </a>
-              {{/if}}
-              {{#if (not (or content.date content.capitalize content.link))}}
-                {{content.value}}
-              {{/if}}
-            </span>
-          </div>
+                {{/if}}
+              </span>
+            </div>
+          {{/if}}
         {{/if}}
       {{/each-in}}
     {{/each}}
