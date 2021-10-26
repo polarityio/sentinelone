@@ -99,8 +99,8 @@ polarity.export = PolarityComponent.extend({
             'connectOrDisconnect',
             `Successfully ${
               networkStatus === 'connected' || networkStatus === 'connecting'
-                ? 'Connecting to'
-                : 'Disconnecting from'
+                ? 'Initiated Connecting to'
+                : 'Initiated Disconnecting from'
             } Network!`
           );
           const agents = outerThis.get('details.agents');

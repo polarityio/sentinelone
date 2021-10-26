@@ -208,6 +208,26 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'allowConnectingandDisconnectingEndpoints',
+      name: 'Allow Connecting and Disconnecting Endpoints',
+      description:
+        'When checked, users can Connecting and Disconnecting Endpoints from the Network.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'allowAddingThreatsToBlocklist',
+      name: 'Allow Adding Threats to Blocklist',
+      description:
+        'When checked, users can add Threats to all Scope Levels in the Blocklist.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'endpointFieldsToDisplay',
       name: 'Endpoint Display Fields',
       description:

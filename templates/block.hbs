@@ -50,41 +50,43 @@
               {{/if}}
             </span>
           </h1>
-          <div class="message-button-container">
-            <div class="d-flex flex-row align-items-center">
-              {{#if (eq agent.networkStatus "Unknown")}}
-                <p class="enable-action-message">
-                  To enable Network Connection or Disconnection Actions in this integration on this Endpoint,
-                  enable "Network Status" in the "Endpoint Display Fields" user option, and re-search this entity.
-                </p>
-              {{else}}
-                <button
-                  {{action "connectOrDisconnectEndpoint" agent agentIndex}}
-                  class="p-btn btn btn-light mt-1"
-                  disabled={{or (get connectOrDisconnectIsRunning agentIndex) (get connectOrDisconnectMessages agentIndex) (get connectOrDisconnectErrorMessages agentIndex)}}
-                >
-                  {{#if (get connectOrDisconnectIsRunning agentIndex)}}
-                    {{fa-icon "spinner-third" fixedWidth=true spin=true}}
-                  {{/if}}
-                  {{#if (or (eq agent.networkStatus "connected") (eq agent.networkStatus "connecting"))}}
-                    Isolate/Disconnect
-                  {{else}}
-                    Connect to Network
-                  {{/if}}
-                </button>
+          {{#if block.userOptions.allowConnectingandDisconnectingEndpoints}}
+            <div class="message-button-container">
+              <div class="d-flex flex-row align-items-center">
+                {{#if (eq agent.networkStatus "Unknown")}}
+                  <p class="enable-action-message">
+                    To enable Network Connection or Disconnection Actions in this integration on this Endpoint,
+                    enable "Network Status" in the "Endpoint Display Fields" user option, and re-search this entity.
+                  </p>
+                {{else}}
+                  <button
+                    {{action "connectOrDisconnectEndpoint" agent agentIndex}}
+                    class="p-btn btn btn-light mt-1"
+                    disabled={{or (get connectOrDisconnectIsRunning agentIndex) (get connectOrDisconnectMessages agentIndex) (get connectOrDisconnectErrorMessages agentIndex)}}
+                  >
+                    {{#if (get connectOrDisconnectIsRunning agentIndex)}}
+                      {{fa-icon "spinner-third" fixedWidth=true spin=true}}
+                    {{/if}}
+                    {{#if (or (eq agent.networkStatus "connected") (eq agent.networkStatus "connecting"))}}
+                      Isolate/Disconnect
+                    {{else}}
+                      Connect to Network
+                    {{/if}}
+                  </button>
+                {{/if}}
+              </div>
+              {{#if (get connectOrDisconnectMessages agentIndex)}}
+                <div class="alert alert-info mt-1">
+                  {{get connectOrDisconnectMessages agentIndex}}
+                </div>
+              {{/if}}
+              {{#if (get connectOrDisconnectErrorMessages agentIndex)}}
+                <div class="alert alert-danger mt-1">
+                  {{get connectOrDisconnectErrorMessages agentIndex}}
+                </div>
               {{/if}}
             </div>
-            {{#if (get connectOrDisconnectMessages agentIndex)}}
-              <div class="alert alert-info mt-1">
-                {{get connectOrDisconnectMessages agentIndex}}
-              </div>
-            {{/if}}
-            {{#if (get connectOrDisconnectErrorMessages agentIndex)}}
-              <div class="alert alert-danger mt-1">
-                {{get connectOrDisconnectErrorMessages agentIndex}}
-              </div>
-            {{/if}}
-          </div>
+          {{/if}}
         {{else}}
           {{#if (not (or (eq label "networkStatus") (eq label "id")))}}
             <div>
@@ -141,44 +143,46 @@
               {{/if}}
             </span>
           </h1>
-          {{#if (and (eq threat.blocklistScope "Unknown") (not (eq (get threat "Found in Blocklist") "No")))}}
-            <p class="enable-action-message">
-              To enable Adding Threats to the Blocklist in this integration on this threat,
-              enable "Found in Blocklist" and "Blocklist Scope" in the "Threat Display Fields" user option, and re-search this entity.
-            </p>
-          {{else}}
-            <div class="select-container pt-1">
-              <span class="p-value">Blocking Scope: </span>
-              <select class="w-100" onchange={{action "setBlockingScope" threatIndex}} disabled={{interactionDisabled}}>
-                <option value="site">Site</option>
-                <option value="group">Group</option>
-                <option value="account">Account</option>
-              </select>
-            </div>
-            <div class="message-button-container">
-              <div class="d-flex flex-row align-items-center">
-                <button
-                  {{action "addThreatToBlocklist" threat threatIndex}}
-                  class="p-btn btn btn-light mt-1"
-                  disabled={{or (get blockingIsRunning threatIndex) (get blockingMessages threatIndex) (get blockingErrorMessages threatIndex)}}
-                >
-                  {{#if (get blockingIsRunning threatIndex)}}
-                    {{fa-icon "spinner-third" fixedWidth=true spin=true}}
-                  {{/if}}
-                  Add to Blocklist
-                </button>
+          {{#if block.userOptions.allowAddingThreatsToBlocklist}}
+            {{#if (and (eq threat.blocklistScope "Unknown") (not (eq (get threat "Found in Blocklist") "No")))}}
+              <p class="enable-action-message">
+                To enable Adding Threats to the Blocklist in this integration on this threat,
+                enable "Found in Blocklist" and "Blocklist Scope" in the "Threat Display Fields" user option, and re-search this entity.
+              </p>
+            {{else}}
+              <div class="select-container pt-1">
+                <span class="p-value">Blocking Scope: </span>
+                <select class="w-100" onchange={{action "setBlockingScope" threatIndex}} disabled={{interactionDisabled}}>
+                  <option value="site">Site</option>
+                  <option value="group">Group</option>
+                  <option value="account">Account</option>
+                </select>
               </div>
-              {{#if (get blockingMessages threatIndex)}}
-                <div class="alert alert-info mt-1">
-                  {{get blockingMessages threatIndex}}
+              <div class="message-button-container">
+                <div class="d-flex flex-row align-items-center">
+                  <button
+                    {{action "addThreatToBlocklist" threat threatIndex}}
+                    class="p-btn btn btn-light mt-1"
+                    disabled={{or (get blockingIsRunning threatIndex) (get blockingMessages threatIndex) (get blockingErrorMessages threatIndex)}}
+                  >
+                    {{#if (get blockingIsRunning threatIndex)}}
+                      {{fa-icon "spinner-third" fixedWidth=true spin=true}}
+                    {{/if}}
+                    Add to Blocklist
+                  </button>
                 </div>
-              {{/if}}
-              {{#if (get blockingErrorMessages threatIndex)}}
-                <div class="alert alert-danger mt-1">
-                  {{get blockingErrorMessages threatIndex}}
-                </div>
-              {{/if}}
-            </div>
+                {{#if (get blockingMessages threatIndex)}}
+                  <div class="alert alert-info mt-1">
+                    {{get blockingMessages threatIndex}}
+                  </div>
+                {{/if}}
+                {{#if (get blockingErrorMessages threatIndex)}}
+                  <div class="alert alert-danger mt-1">
+                    {{get blockingErrorMessages threatIndex}}
+                  </div>
+                {{/if}}
+              </div>
+            {{/if}}
           {{/if}}
         {{else}}
           {{#if (not (or (eq label "id") (eq label "blocklistScope") (eq label "numberOfBlocklistItems")))}}
