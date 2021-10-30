@@ -49,7 +49,7 @@ const addThreatToBlocklist = async (
     const { title, detail, code } = getOr(
       {
         title: error.message,
-        detail: 'Threat not blocked',
+        detail: 'Block Attempt Unsuccessful',
         code: error.status
       },
       'errors.0',

@@ -4,6 +4,7 @@ const { splitOutIgnoredIps,objectPromiseAll } = require('./dataTransformations')
 const createLookupResults = require('./createLookupResults');
 const queryAgents = require('./queryAgents');
 const queryThreats = require('./queryThreats');
+const addPoliciesToAgents = require('./addPoliciesToAgents');
 
 const getLookupResults = async (entities, options, requestWithDefaults, Logger) => {
 
@@ -43,7 +44,13 @@ const _getFoundEntities = async (
         ? await queryAgents(entity, foundThreats, options, requestWithDefaults, Logger)
         : foundAgents;
 
-      return { entity, foundAgents, foundThreats };
+      const { globalPolicy, foundAgentsWithPolicies } = options.allowPolicyEdits
+        ? await addPoliciesToAgents(foundAgents, options, requestWithDefaults, Logger)
+        : { globalPolicy: {}, foundAgentsWithPolicies: foundAgents};
+
+      foundAgents = foundAgentsWithPolicies;
+      
+      return { entity, foundAgents, foundThreats, globalPolicy };
     }, entitiesPartition)
   );
 

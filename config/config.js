@@ -3,8 +3,8 @@ const ALL_ENDPOINT_DISPLAY_FIELDS = [
   { display: 'Endpoint Name', value: 'Endpoint Name' },
   { display: 'Account', value: 'Account' },
   { display: 'Site', value: 'Site' },
-  { display: 'Last Logged In User', value: 'Last Logged In User' },
   { display: 'Group', value: 'Group' },
+  { display: 'Last Logged In User', value: 'Last Logged In User' },
   { display: 'Domain', value: 'Domain' },
   { display: 'Console Visible IP', value: 'Console Visible IP' },
   { display: 'Agent Version', value: 'Agent Version' },
@@ -52,8 +52,8 @@ const DEFAULT_ENDPOINT_DISPLAY_FIELDS = [
   { display: 'Endpoint Name', value: 'Endpoint Name' },
   { display: 'Account', value: 'Account' },
   { display: 'Site', value: 'Site' },
-  { display: 'Last Logged In User', value: 'Last Logged In User' },
   { display: 'Group', value: 'Group' },
+  { display: 'Last Logged In User', value: 'Last Logged In User' },
   { display: 'Domain', value: 'Domain' },
   { display: 'Console Visible IP', value: 'Console Visible IP' },
   { display: 'Last Active', value: 'Last Active' },
@@ -162,7 +162,12 @@ const DEFAULT_THREAT_DISPLAY_FIELDS = [
 module.exports = {
   name: 'SentinelOne',
   acronym: 'S1',
-  description: '', //TODO:
+  description:
+    'The SentinelOne platform delivers the defenses you need to prevent, detect, and ' +
+    "undo—known and unknown—threats. Polarity's SentinelOne integration allows automated " +
+    'queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  ' +
+    'This integration allows you to Connect and Disconnect Endpoints from your Network, ' +
+    'Add Threats to the Blocklist, and Edit Policy Settings.',
   entityTypes: ['IPv4', 'IPv6', 'domain', 'url', 'hash'],
   defaultColor: 'light-purple',
   styles: ['./styles/styles.less'],
@@ -183,7 +188,7 @@ module.exports = {
     rejectUnauthorized: false
   },
   logging: {
-    level: 'trace' //trace, debug, info, warn, error, fatal
+    level: 'info' //trace, debug, info, warn, error, fatal
   },
   options: [
     {
@@ -208,7 +213,7 @@ module.exports = {
       adminOnly: true
     },
     {
-      key: 'allowConnectingandDisconnectingEndpoints',
+      key: 'allowConnectingAndDisconnectingEndpoints',
       name: 'Allow Connecting and Disconnecting Endpoints',
       description:
         'When checked, users can Connecting and Disconnecting Endpoints from the Network.',
@@ -222,6 +227,16 @@ module.exports = {
       name: 'Allow Adding Threats to Blocklist',
       description:
         'When checked, users can add Threats to all Scope Levels in the Blocklist.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'allowPolicyEdits',
+      name: 'Allow Policy Edits',
+      description:
+        'When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy.',
       default: true,
       type: 'boolean',
       userCanEdit: false,

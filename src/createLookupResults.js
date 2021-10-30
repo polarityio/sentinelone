@@ -1,38 +1,36 @@
-const { flow, map, get, reduce, size, compact, find, __, filter } = require('lodash/fp');
+const { flow, map, get, reduce, size, find, __, filter } = require('lodash/fp');
 const {
   ENDPOINT_DISPLAY_FIELD_PROCESSING,
   THREAT_DISPLAY_FIELD_PROCESSING
 } = require('./constants');
 
-
 const createLookupResults = (foundEntities, options, Logger) =>
-  flow(
-    map(({ entity, foundAgents, foundThreats }) => {
-      let lookupResult;
-      if (size(foundAgents) || size(foundThreats)) {
-        const formattedQueryResult = formatQueryResult(
-          foundAgents,
-          foundThreats,
-          options,
-          Logger
-        );
-        lookupResult = {
-          entity,
-          data: {
-            summary: createSummary(formattedQueryResult),
-            details: formattedQueryResult
-          }
-        };
-      } else {
-        lookupResult = {
-          entity,
-          data: null
-        };
-      }
-      return lookupResult;
-    }),
-    compact
-  )(foundEntities);
+  map(({ entity, foundAgents, foundThreats, globalPolicy }) => {
+    let lookupResult;
+    if (size(foundAgents) || size(foundThreats)) {
+      const formattedQueryResult = formatQueryResult(
+        foundAgents,
+        foundThreats,
+        globalPolicy,
+        options,
+        Logger
+      );
+
+      lookupResult = {
+        entity,
+        data: {
+          summary: createSummary(formattedQueryResult),
+          details: formattedQueryResult
+        }
+      };
+    } else {
+      lookupResult = {
+        entity,
+        data: null
+      };
+    }
+    return lookupResult;
+  }, foundEntities);
 
 const createSummary = ({ threats, agents }) => {
   const unresolvedThreatsCount = flow(
@@ -46,10 +44,7 @@ const createSummary = ({ threats, agents }) => {
   )(threats);
 
   const unhealthyEndpoints = flow(
-    filter(
-      (agent) =>
-        get(`['Health Status'].value`, agent) !== 'Healthy'
-    ),
+    filter((agent) => get(`['Health Status'].value`, agent) !== 'Healthy'),
     size
   )(agents);
 
@@ -59,7 +54,7 @@ const createSummary = ({ threats, agents }) => {
     .concat(unhealthyEndpoints ? `Unhealthy Endpoints: ${unhealthyEndpoints}` : []);
 };
 
-const formatQueryResult = (foundAgents, foundThreats, options, Logger) => {
+const formatQueryResult = (foundAgents, foundThreats, globalPolicy, options, Logger) => {
   const selectedEndpointProcessingFields = flow(
     get('endpointFieldsToDisplay'),
     map(({ value }) =>
@@ -75,6 +70,7 @@ const formatQueryResult = (foundAgents, foundThreats, options, Logger) => {
   )(options);
 
   return {
+    globalPolicy,
     agents: getDisplayFieldsFromOptions(
       foundAgents,
       selectedEndpointProcessingFields,
@@ -89,8 +85,6 @@ const formatQueryResult = (foundAgents, foundThreats, options, Logger) => {
     unformattedThreats: foundThreats
   };
 };
-
-
 
 const getDisplayFieldsFromOptions = (foundItems, displayFields, options) =>
   map(
@@ -121,9 +115,6 @@ const getDisplayValue = (valuePath, foundItem, possiblePaths, process) =>
         get(possiblePaths ? find(get(__, foundItem), possiblePaths) : valuePath),
         process
       )(foundItem)
-    : get(
-        possiblePaths ? find(get(__, foundItem), possiblePaths) : valuePath,
-        foundItem
-      );
+    : get(possiblePaths ? find(get(__, foundItem), possiblePaths) : valuePath, foundItem);
 
 module.exports = createLookupResults;

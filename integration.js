@@ -5,6 +5,7 @@ const validateOptions = require('./src/validateOptions');
 const createRequestWithDefaults = require('./src/createRequestWithDefaults');
 const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
 const addThreatToBlocklist = require('./src/addThreatToBlocklist');
+const submitPolicyEdits = require('./src/submitPolicyEdits');
 
 const { getLookupResults } = require('./src/getLookupResults');
 
@@ -17,7 +18,8 @@ const startup = (logger) => {
 
 const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
-
+  options.url = url.endsWith('/') ? url.slice(0, -1) : url;
+  
   let lookupResults;
   try {
     lookupResults = await getLookupResults(entities, options, requestWithDefaults, Logger);
@@ -32,7 +34,11 @@ const doLookup = async (entities, options, cb) => {
 };
 
 
-const getOnMessage = { connectOrDisconnectEndpoint, addThreatToBlocklist };
+const getOnMessage = {
+  connectOrDisconnectEndpoint,
+  addThreatToBlocklist,
+  submitPolicyEdits
+};
 
 const onMessage = ({ action, data: actionParams }, options, callback) =>
   getOnMessage[action](actionParams, options, requestWithDefaults, callback, Logger);

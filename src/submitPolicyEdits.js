@@ -1,7 +1,7 @@
 const { getOr } = require('lodash/fp');
 
-const connectOrDisconnectEndpoint = async (
-  { id: endpointId, networkStatus },
+const submitPolicyEdits = async (
+  { policySubmission, endpointToEditPolicyOn, policyEditScope },
   options,
   requestWithDefaults,
   callback,
@@ -9,41 +9,35 @@ const connectOrDisconnectEndpoint = async (
 ) => {
   try {
     await requestWithDefaults({
-      method: 'POST',
-      url: `${options.url}/web/api/v2.1/agents/actions/${
-        networkStatus === 'connected' || networkStatus === 'connecting'
-          ? 'disconnect'
-          : 'connect'
+      method: 'PUT',
+      url: `${options.url}/web/api/v2.1/${
+        policyEditScope === 'global'
+          ? 'tenant/policy'
+          : `${policyEditScope}s/${endpointToEditPolicyOn[`${policyEditScope}Id`]}/policy`
       }`,
       headers: {
         Authorization: `ApiToken ${options.apiToken}`,
         'Content-Type': 'application/json'
       },
-      body: { filter: { ids: [endpointId] } },
+      body: { data: policySubmission },
       json: true
     });
 
-    callback(null, {
-      networkStatus:
-        networkStatus === 'connected' || networkStatus === 'connecting'
-          ? 'disconnecting'
-          : 'connecting'
-    });
+    callback(null, {});
   } catch (error) {
     const err = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
     Logger.error(
       {
-        detail: 'Failed to Get Connect or Disconnect Endpoint/Agent',
-        networkStatus,
+        detail: 'Failed to Submit Policy Edit Changes',
         options,
         formattedError: err
       },
-      'Connect or Disconnect Endpoint/Agent Failed'
+      'Submit Policy Edit Changes Failed'
     );
     const { title, detail, code } = getOr(
       {
         title: error.message,
-        detail: 'Failed to Get Connect or Disconnect Endpoint/Agent',
+        detail: 'Saving Policy Changes Unsuccessful',
         code: error.status
       },
       'errors.0',
@@ -55,11 +49,13 @@ const connectOrDisconnectEndpoint = async (
       errors: [
         {
           err: error,
-          detail: `${title}${detail ? ` - ${detail}` : ''}, Code: ${code}`
+          detail: `${title}${detail ? ` - ${detail}` : ''}${
+            code ? `, Code: ${code}` : ''
+          }`
         }
       ]
     });
   }
 };
 
-module.exports = connectOrDisconnectEndpoint;
+module.exports = submitPolicyEdits;

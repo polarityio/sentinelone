@@ -21,6 +21,17 @@
       </a>
     </li>
   {{/if}}
+  {{#if (and details.agents block.userOptions.allowPolicyEdits)}}
+    <li class="nav-item">
+      <a
+        {{action "changeTab" "editPolicy"}}
+        class="nav-link {{if (eq activeTab "editPolicy") "active"}}"
+        href="#"
+      >
+        {{fa-icon "edit" size="md"}} Edit Policy
+      </a>
+    </li>
+  {{/if}}
 </ul>
 {{#if (eq activeTab "endpoints")}}
   <div class="list">
@@ -50,7 +61,7 @@
               {{/if}}
             </span>
           </h1>
-          {{#if block.userOptions.allowConnectingandDisconnectingEndpoints}}
+          {{#if block.userOptions.allowConnectingAndDisconnectingEndpoints}}
             <div class="message-button-container">
               <div class="d-flex flex-row align-items-center">
                 {{#if (eq agent.networkStatus "Unknown")}}
@@ -87,8 +98,42 @@
               {{/if}}
             </div>
           {{/if}}
+          {{!-- {{#if block.userOptions.allowPolicyReversions}}
+            <div class="select-container pt-1">
+              <span class="p-value">Policy Reversion Scope: </span>
+              <select class="w-100" onchange={{action "setPolicyReversionScope" agentIndex}} disabled={{interactionDisabled}}>
+                <option value="site">Associated Site</option>
+                <option value="group">Associated Group</option>
+                <option value="account">Associated Account</option>
+              </select>
+            </div>
+            <div class="message-button-container">
+              <div class="d-flex flex-row align-items-center">
+                <button
+                  {{action "revertToGlobalPolicy" agent agentIndex}}
+                  class="p-btn btn btn-light mt-1"
+                  disabled={{or (get policyReversionIsRunning agentIndex) (get policyReversionMessages agentIndex) (get policyReversionErrorMessages agentIndex)}}
+                >
+                  {{#if (get policyReversionIsRunning agentIndex)}}
+                    {{fa-icon "spinner-third" fixedWidth=true spin=true}}
+                  {{/if}}
+                  Revert to Global Policy
+                </button>
+              </div>
+              {{#if (get policyReversionMessages agentIndex)}}
+                <div class="alert alert-info mt-1">
+                  {{get policyReversionMessages agentIndex}}
+                </div>
+              {{/if}}
+              {{#if (get policyReversionErrorMessages agentIndex)}}
+                <div class="alert alert-danger mt-1">
+                  {{get policyReversionErrorMessages agentIndex}}
+                </div>
+              {{/if}}
+            </div>
+          {{/if}} --}}
         {{else}}
-          {{#if (not (or (eq label "networkStatus") (eq label "id")))}}
+          {{#if (not (or (eq label "id") (eq label "networkStatus") (eq label "endpointName")))}}
             <div>
               <span class="p-key">{{label}}: </span>
               <span class="p-value">
@@ -144,7 +189,7 @@
             </span>
           </h1>
           {{#if block.userOptions.allowAddingThreatsToBlocklist}}
-            {{#if (and (eq threat.blocklistScope "Unknown") (not (eq (get threat "Found in Blocklist") "No")))}}
+            {{#if (and (eq threat.blocklistScope "Unknown") numberOfBlocklistItems)}}
               <p class="enable-action-message">
                 To enable Adding Threats to the Blocklist in this integration on this threat,
                 enable "Found in Blocklist" and "Blocklist Scope" in the "Threat Display Fields" user option, and re-search this entity.
@@ -210,5 +255,810 @@
         {{/if}}
       {{/each-in}}
     {{/each}}
+  </div>
+{{/if}}
+
+{{#if (eq activeTab "editPolicy")}}
+  <div class="edit-policy-container">
+    <div class="select-container pt-1">
+      <span class="p-value">Endpoint: </span>
+      <select
+        class="w-100"
+        onchange={{action "changeEndpointToEditPolicyOn" value="target.value"}}
+        disabled={{interactionDisabled}}
+      >
+        {{#each details.unformattedAgents as |agent agentIndex|}}
+          <option value={{agentIndex}}>{{agent.computerName}}</option>
+        {{/each}}
+      </select>
+    </div>
+    <div class="select-container pt-1">
+      <span class="p-value">Policy Edit Scope: </span>
+      <select class="w-100" onchange={{action "changePolicyEditScope" value="target.value"}} disabled={{interactionDisabled}}>
+        <option value="site">
+          {{#if endpointToEditPolicyOn.siteName}}{{endpointToEditPolicyOn.siteName}} ({{/if}}Site{{#if endpointToEditPolicyOn.siteName}}){{/if}}
+        </option>
+        <option value="group">
+          {{#if endpointToEditPolicyOn.groupName}}{{endpointToEditPolicyOn.groupName}} ({{/if}}Group{{#if endpointToEditPolicyOn.groupName}}){{/if}}
+        </option>
+        <option value="account">
+          {{#if endpointToEditPolicyOn.accountName}}{{endpointToEditPolicyOn.accountName}} ({{/if}}Account{{#if endpointToEditPolicyOn.accountName}}){{/if}}
+        </option>
+        <option value="global">
+          Global
+        </option>
+      </select>
+    </div>
+
+    {{#if (get expandableTitleStates "protectionMode")}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "protectionMode")}}
+      >
+        <span class="text">Protection Mode</span> {{fa-icon "angle-up" size="lg"}}
+      </a>
+      <div class="edit-policy-section">
+        <div class="select-container pt-1">
+          <span class="p-value">Malicious Threat: </span>
+          <select class="w-100" onchange={{action (mut policySubmission.mitigationMode) value="target.value"}} disabled={{interactionDisabled}}>
+            {{#if (eq policySubmission.mitigationMode "protect")}}
+              <option value="protect">Protect</option>
+              <option value="detect">Detect</option>
+            {{else}}
+              <option value="detect">Detect</option>
+              <option value="protect">Protect</option>
+            {{/if}}
+          </select>
+        </div>
+        <p class="edit-policy-message">
+          {{#if (eq policySubmission.mitigationMode "protect")}}
+            {{get protectionLevels policySubmission.autoMitigationAction}}
+          {{else}}
+            Alerts Only
+          {{/if}}
+        </p>
+        <div class="select-container pt-1">
+          <span class="p-value">Suspicious Threat: </span>
+          <select class="w-100" onchange={{action (mut policySubmission.mitigationModeSuspicious) value="target.value"}} disabled={{or interactionDisabled (eq policySubmission.mitigationMode "detect")}}>
+            {{#if (and (eq policySubmission.mitigationMode "protect") (eq policySubmission.mitigationModeSuspicious "protect"))}}
+              <option value="protect">Protect</option>
+              <option value="detect">Detect</option>
+            {{else}}
+              <option value="detect">Detect</option>
+              <option value="protect">Protect</option>
+            {{/if}}
+          </select>
+        </div>
+        <p class="edit-policy-message">
+          {{#if (and (eq policySubmission.mitigationMode "protect") (eq policySubmission.mitigationModeSuspicious "protect"))}}
+            {{get protectionLevels policySubmission.autoMitigationAction}}
+          {{else}}
+            Alerts Only
+          {{/if}}
+        </p>
+        <div class="select-container pt-1">
+          <span class="p-value">Protect Level: </span>
+          <select class="w-100" onchange={{action (mut policySubmission.autoMitigationAction) value="target.value"}} disabled={{or interactionDisabled (eq policySubmission.mitigationMode "detect")}}>
+            <option value="mitigation.quarantineThreat">Kill & Quarantine</option>
+            <option value="mitigation.remediateThreat">Kill & Quarantine, Remediate</option>
+            <option value="mitigation.rollbackThreat">Kill & Quarantine, Remediate, Rollback</option>
+          </select>
+        </div>
+        <div class="select-container pt-1">
+          <span class="p-value">Containment: </span>
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "toggleState" "policySubmission.networkQuarantineOn")
+              checked=(and policySubmission.networkQuarantineOn (eq policySubmission.mitigationMode "protect"))
+              disabled=(or interactionDisabled (eq policySubmission.mitigationMode "detect"))
+            }}
+            <span class="checkbox-label {{if (eq policySubmission.mitigationMode "detect") "disabled"}}">Disconnect from network</span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=containmentDescription}}
+        </div>
+      </div>
+    {{else}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "protectionMode")}}
+      >
+        <span class="text">Protection Mode</span> {{fa-icon "angle-down" size="lg"}}
+      </a>
+    {{/if}}
+    
+
+    {{#if (get expandableTitleStates "detectionEngines")}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "detectionEngines")}}
+      >
+        <span class="text">Detection Engines</span> {{fa-icon "angle-up" size="lg"}}
+      </a>
+      <div class="edit-policy-section">
+        <span class="p-value checkbox-left-label">Bulk Engine Changes: </span>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.monitorOnWrite
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              On Write
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=onWriteDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.monitorOnExecute
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              On Execute
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=onExecuteDescription}}
+        </div>
+
+        <span class="p-value checkbox-left-label">Individual Engine Changes: </span>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.preExecution")
+              checked=preExecution
+              disabled=(or interactionDisabled (not policySubmission.monitorOnWrite)) 
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnWrite) "disabled"}}">
+              Static AI
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=staticAiDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.preExecutionSuspicious")
+              checked=preExecutionSuspicious
+              disabled=(or interactionDisabled (not policySubmission.monitorOnWrite))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnWrite) "disabled"}}">
+              Static AI Suspicious
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=staticAiSuspiciousDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.executables")
+              checked=executables
+              disabled=(or interactionDisabled (not policySubmission.monitorOnExecute))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnExecute) "disabled"}}">
+              Behavioral AI - Executables
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=behaviorAiExecutablesDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.dataFiles")
+              checked=dataFiles
+              disabled=(or interactionDisabled (not policySubmission.monitorOnExecute))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnExecute) "disabled"}}">
+              Documents, Scripts
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=documentsScriptsDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.lateralMovement")
+              checked=lateralMovement
+              disabled=(or interactionDisabled (not policySubmission.monitorOnExecute))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnExecute) "disabled"}}">
+              Lateral Movement
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=lateralMovementDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.exploits")
+              checked=exploits
+              disabled=(or interactionDisabled (not policySubmission.monitorOnExecute))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnExecute) "disabled"}}">
+              Anti Exploitation / Fileless
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=antiExploitationFilelessDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.pup")
+              checked=pup
+              disabled=(or interactionDisabled (not policySubmission.monitorOnExecute))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnExecute) "disabled"}}">
+              Potentially Unwanted Applications
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=potentiallyUnwantedApplicationsDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.applicationControl")
+              checked=applicationControl
+              disabled=(or interactionDisabled (not policySubmission.monitorOnExecute))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnExecute) "disabled"}}">
+              Application Control (Containers only)
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=applicationControlContainersOnlyDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              click=(action "updateDetectionEngine" "policySubmission.engines.penetration")
+              checked=penetration
+              disabled=(or interactionDisabled (not policySubmission.monitorOnExecute))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.monitorOnExecute) "disabled"}}">
+              Detect Interactive Threat
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=detectInteractiveThreatDescription}}
+        </div>
+      </div>
+    {{else}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "detectionEngines")}}
+      >
+        <span class="text">Detection Engines</span> {{fa-icon "angle-down" size="lg"}}
+      </a>
+    {{/if}}
+
+
+    {{#if (get expandableTitleStates "agent")}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "agent")}}
+      >
+        <span class="text">Agent</span> {{fa-icon "angle-up" size="lg"}}
+      </a>
+      <div class="edit-policy-section">
+        <span class="p-value checkbox-left-label">Security Settings: </span>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.antiTamperingOn
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Anti Tamper
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=antiTamperDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.snapshotsOn
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Snapshots
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=snapshotsDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentLoggingOn
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Logging
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=loggingDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.scanNewAgents
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Scan New Agents
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=scanNewAgentsDescription}}
+        </div>
+
+        <span class="p-value checkbox-left-label">Agent UI: </span>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.agentUiOn
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Show Agent UI & tray icon on endpoints
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=showAgentUiAndTrayIconOnEndpointsDescription}}
+        </div>
+        <p class="edit-policy-message">
+          Set which information and notifications to show for end-users
+        </p>
+        
+        <span class="p-value checkbox-left-label">Show pop-up notifications for: </span>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.threatPopUpNotifications
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Threats and Mitigation
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=showNotificationsThreatsAndMitigationDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.devicePopUpNotifications
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Blocked Devices
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=showNotificationsBlockedDevicesDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <span class="p-value checkbox-left-label">Show suspicious events in the UI: </span>
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.showSuspicious
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Include Suspicious
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=includeSuspiciousDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <span class="p-value checkbox-left-label">Show warning in case of Agent errors: </span>
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.showAgentWarnings
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Include Warnings
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=includeWarningsDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <span class="p-value checkbox-left-label">Show in the UI events from the last: </span>
+          <label>
+            {{input
+              type="number"
+              min="1"
+              max="365"
+              enter=(action "setWithinRange" "policySubmission.agentUi.maxEventAgeDays" "1" "365")
+              change=(action "setWithinRange" "policySubmission.agentUi.maxEventAgeDays" "1" "365")
+              focus-out=(action "setWithinRange" "policySubmission.agentUi.maxEventAgeDays" "1" "365")
+              value=policySubmission.agentUi.maxEventAgeDays
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              days
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=showInUiEventsFromLastDaysDescription}}
+        </div>
+        <span class="p-value checkbox-left-label">Show these menu items in the UI: </span>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.showDeviceTab
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Blocked Devices
+            </span>
+          </label>
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.showQuarantineTab
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Quarantined Files
+            </span>
+          </label>
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.agentUi.showSupport
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Contact Support
+            </span>
+          </label>
+        </div>
+      </div>
+    {{else}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "agent")}}
+      >
+        <span class="text">Agent</span> {{fa-icon "angle-down" size="lg"}}
+      </a>
+    {{/if}}
+
+
+    {{#if (get expandableTitleStates "deepVisibility")}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "deepVisibility")}}
+      >
+        <span class="text">Deep Visibility</span> {{fa-icon "angle-up" size="lg"}}
+      </a>
+      <div class="edit-policy-section">
+        <div class="select-container pt-1 detection-engine">
+          <span class="p-value checkbox-left-label">Deep Visibility Configuration: </span>
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.ioc
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Enable Deep Visibility
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=enableDeepVisibilityDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.process
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Process
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=processDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.file
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              File
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=fileDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.url
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              URL
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=urlDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.dns
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              DNS
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=dnsDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.ip
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              IP
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=ipDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.login
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Login
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=loginDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.registry
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Registry Keys
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=registryKeysDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.scheduledTask
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Scheduled Task
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=scheduledTaskDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.fds
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Full Disk Scan
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=scheduledTaskDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.behavioralIndicators
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Behavioral Indicators
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=behavioralIndicatorsDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.commandScripts
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Command Scripts
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=commandScriptsDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.crossProcess
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Cross Process
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=crossProcessDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.dataMasking
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Data Masking
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=dataMaskingDescription}}
+        </div>
+        <br>
+        <div class="select-container pt-1 detection-engine">
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.iocAttributes.autoInstallBrowserExtensions
+              disabled=(or interactionDisabled (not policySubmission.ioc))
+            }}
+            <span class="checkbox-label {{if (not policySubmission.ioc) "disabled"}}">
+              Automatically install Deep Visibility browser extensions
+            </span>
+          </label>
+        </div>
+        <p class="edit-policy-message {{if (not policySubmission.ioc) "disabled"}}" title="
+          This overrides other browser extensions deployed with Google Workspace. 
+          If your organization uses Google Workspace to deploy browser extensions, deselect 
+          this option and deploy the SentinelOne browser extension in the same way you deploy 
+          other extensions. This option requires Windows Agent 4.7+.">
+          {{fa-icon "exclamation-circle" class="info-icon" size="md"}}
+          Do not select if your organization uses Google Workspace (formerly G Suite) to 
+          manage browser extensions
+        </p>
+      </div>
+    {{else}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "deepVisibility")}}
+      >
+        <span class="text">Deep Visibility</span> {{fa-icon "angle-down" size="lg"}}
+      </a>
+    {{/if}}
+    
+    
+    {{#if (get expandableTitleStates "moreOptions")}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "moreOptions")}}
+      >
+        <span class="text">More Options</span> {{fa-icon "angle-up" size="lg"}}
+      </a>
+      <div class="edit-policy-section">
+        <div class="select-container pt-1 detection-engine">
+          <span class="p-value checkbox-left-label">Decommissioning: </span>
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.autoDecommissionOn
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Auto decommission after 
+              {{input
+                type="number"
+                min=1
+                max=99
+                enter=(action "setWithinRange" "policySubmission.autoDecommissionDays" "1" "99")
+                change=(action "setWithinRange" "policySubmission.autoDecommissionDays" "1" "99")
+                focus-out=(action "setWithinRange" "policySubmission.autoDecommissionDays" "1" "99")
+                value=policySubmission.autoDecommissionDays
+                disabled=(or interactionDisabled (not autoDecommissionOn))
+              }}
+              days offline
+            </span>
+          </label>
+          {{fa-icon "question" class="info-icon" size="md" title=shouldAutoDecommissionWithinDaysDescription}}
+        </div>
+        <div class="select-container pt-1 detection-engine">
+          <span class="p-value checkbox-left-label">Remote Shell: </span>
+          <label>
+            {{input
+              type="checkbox"
+              checked=policySubmission.allowRemoteShell
+              disabled=interactionDisabled
+            }}
+            <span class="checkbox-label">
+              Enable Remote Shell
+            </span>
+          </label>
+        </div>
+      </div>
+    {{else}}
+      <a
+        href="#"
+        class="expandable-title"
+        {{on "click" (action "toggleExpandableTitle" "moreOptions")}}
+      >
+        <span class="text">More Options</span> {{fa-icon "angle-down" size="lg"}}
+      </a>
+    {{/if}}
+    
+    
+    <div class="message-button-container policy-save">
+      <div class="d-flex flex-row align-items-center">
+        <button
+          {{action "submitPolicyEdits"}}
+          class="p-btn btn btn-light mt-1"
+          disabled={{or policyStateNotChanged editPolicyIsRunning editPolicyMessages editPolicyErrorMessages}}
+        >
+          {{#if editPolicyIsRunning}}
+            {{fa-icon "spinner-third" fixedWidth=true spin=true}}
+          {{/if}}
+          Save Changes
+        </button>
+        {{#if policyStateNotChanged}}{{fa-icon "question" class="info-icon" size="md" title="You must change a value to be able to Save Changes."}}{{/if}}
+      </div>
+      {{#if editPolicyMessages}}
+        <div class="alert alert-info mt-1">
+          {{editPolicyMessages}}
+        </div>
+      {{/if}}
+      {{#if editPolicyErrorMessages}}
+        <div class="alert alert-danger mt-1">
+          {{editPolicyErrorMessages}}
+        </div>
+      {{/if}}
+    </div>
   </div>
 {{/if}}
