@@ -18,7 +18,7 @@ const startup = (logger) => {
 
 const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
-  options.url = url.endsWith('/') ? url.slice(0, -1) : url;
+  options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
   
   let lookupResults;
   try {
