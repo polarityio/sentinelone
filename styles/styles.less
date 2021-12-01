@@ -1,0 +1,133 @@
+* {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+.list {
+  padding-top: 10px;
+}
+
+.message-button-container {
+  display: flex;
+
+  flex-direction: row;
+  align-items: center;
+  & button {
+    margin-right: 10px;
+    margin-top: 1px !important;
+    margin-bottom: 4px;
+    margin-left: 0 !important;
+
+    height: inherit;
+    padding: 7px 20px 7px 20px;
+
+    color: #fff;
+    background-color: #7b3ff2;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 400;
+    min-width: 100px;
+  }
+  & .alert {
+    margin-bottom: 4px !important;
+  }
+
+  &.policy-save {
+    margin-top: 10px;
+    & button {
+      min-width: 100px;
+      font-weight: 500;
+      font-size: 13px;
+      border-radius: 5px;
+      padding: 8px 14px 8px 14px;
+    }
+  }
+}
+
+.enable-action-message,
+.edit-policy-message {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-style: italic;
+  color: darkgray;
+}
+
+.edit-policy-message {
+  padding-top: 0;
+}
+
+.select-container {
+  display: flex;
+  align-items: center;
+  padding-top: 2px !important;
+  padding-bottom: 4px;
+  padding-right: 10px;
+  align-items: center;
+  &.detection-engine {
+    padding-bottom: 0px !important;
+  }
+  .p-value {
+    min-width: 115px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+}
+
+.edit-policy-container {
+  padding-top: 12px;
+}
+
+.disabled {
+  color: lightgrey;
+  font-style: italic;
+}
+
+.info-icon {
+  color: #7b3ff2;
+  cursor: help;
+  font-size: 11px;
+  margin-top: -8px !important;
+  margin-left: 5px;
+}
+
+.checkbox-left-label {
+  display: block;
+  padding-right: 8px;
+  padding-bottom: 2px;
+  padding-top: 0px;
+  color: #8a8a8a;
+}
+
+.title {
+  margin-bottom: 6px;
+  .p-key {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: #3a4247 !important;
+    border-bottom: 1px solid #3a4247;
+    font-style: italic;
+  }
+  .p-value {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+  }
+}
+
+.expandable-title {
+  display: block;
+  color: #3a4247 !important;
+  font-weight: 600;
+  margin-top: 8px;
+  margin-bottom: 5px;
+  & .text {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: #3a4247 !important;
+    border-bottom: 1px solid #3a4247;
+    font-style: italic;
+    .desc {
+      color: black !important;
+      font-weight: 400 !important;
+    }
+  }
+}

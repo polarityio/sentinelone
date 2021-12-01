@@ -7,6 +7,6 @@
   "author": "Polarity",
   "dependencies": {
     "lodash": "^4.17.15",
-    "request": "^2.88.2"
+    "postman-request": "*"
   }
 }
