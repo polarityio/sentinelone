@@ -1,6 +1,6 @@
 const fp = require('lodash/fp');
 
-const { splitOutIgnoredIps,objectPromiseAll } = require('./dataTransformations');
+const { splitOutIgnoredIps } = require('./dataTransformations');
 const createLookupResults = require('./createLookupResults');
 const queryAgents = require('./queryAgents');
 const queryThreats = require('./queryThreats');
