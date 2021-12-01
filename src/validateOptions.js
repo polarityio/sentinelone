@@ -3,7 +3,8 @@ const reduce = require('lodash/fp/reduce').convert({ cap: false });
 
 const validateOptions = (options, callback) => {
   const stringOptionsErrorMessages = {
-    //TODO
+    url: 'You must provide a valid URL from your SentinelOne Account',
+    apiKey: 'You must provide a valid API Key from your SentinelOne Account'
   };
 
   const stringValidationErrors = _validateStringOptions(
@@ -11,8 +12,30 @@ const validateOptions = (options, callback) => {
     options
   );
 
+  const urlValidationError = _validateUrlOption(options.url);
+
+  const endpointDisplayFieldsError =
+    options.endpointFieldsToDisplay.value.length === 0
+      ? {
+          key: 'endpointFieldsToDisplay',
+          message: 'You must accept one or more fields to display'
+        }
+      : [];
+  const threatDisplayFieldsError =
+    options.threatFieldsToDisplay.value.length === 0
+      ? {
+          key: 'threatFieldsToDisplay',
+          message: 'You must accept one or more fields to display'
+        }
+      : [];
   
-  callback(null, stringValidationErrors);
+  callback(
+    null,
+    stringValidationErrors
+      .concat(urlValidationError)
+      .concat(endpointDisplayFieldsError)
+      .concat(threatDisplayFieldsError)
+  );
 };
 
 const _validateStringOptions = (stringOptionsErrorMessages, options, otherErrors = []) =>
@@ -27,5 +50,13 @@ const _validateStringOptions = (stringOptionsErrorMessages, options, otherErrors
         })
       : agg;
   }, otherErrors)(stringOptionsErrorMessages);
+
+const _validateUrlOption = ({ value: url }, otherErrors = []) =>
+  url && url.endsWith('//')
+    ? otherErrors.concat({
+        key: 'url',
+        message: 'Your Url must not end with a //'
+      })
+    : otherErrors;
 
 module.exports = validateOptions;
