@@ -1,4 +1,4 @@
-const { getOr } = require('lodash/fp');
+const { getOr, flow, concat, uniqBy } = require('lodash/fp');
 
 const queryAgents = async (
   entity,
@@ -33,7 +33,7 @@ const queryAgents = async (
       json: true
     })
   );
-  const foundAgents = aggAgents.concat(data);
+  const foundAgents = flow(concat(data), uniqBy('id'))(aggAgents);
 
   if (pagination.nextCursor) {
     return await queryAgents(

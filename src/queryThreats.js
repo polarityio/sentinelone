@@ -29,7 +29,7 @@ const queryThreats = async (
     requestWithDefaults
   );
 
-  let foundThreats = aggThreats.concat(data);
+  let foundThreats = flow(concat(data), uniqBy('id'))(aggThreats);
 
   foundThreats = await addBlocklistInfoToThreats(
     foundThreats,
