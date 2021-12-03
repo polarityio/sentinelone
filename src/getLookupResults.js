@@ -27,8 +27,27 @@ const _getFoundEntities = async (
 ) =>
   Promise.all(
     fp.map(async (entity) => {
-      const result = 0
-      return { entity, result };
+      let foundAgents = await queryAgents(entity, [], options, requestWithDefaults, Logger);
+      
+      const foundThreats = await queryThreats(
+        entity,
+        foundAgents,
+        options,
+        requestWithDefaults,
+        Logger
+      ); 
+
+      foundAgents = !foundAgents.length
+        ? await queryAgents(entity, foundThreats, options, requestWithDefaults, Logger)
+        : foundAgents;
+
+      const { globalPolicy, foundAgentsWithPolicies } = options.allowPolicyEdits
+        ? await addPoliciesToAgents(foundAgents, options, requestWithDefaults, Logger)
+        : { globalPolicy: {}, foundAgentsWithPolicies: foundAgents};
+
+      foundAgents = foundAgentsWithPolicies;
+      
+      return { entity, foundAgents, foundThreats, globalPolicy };
     }, entitiesPartition)
   );
 
