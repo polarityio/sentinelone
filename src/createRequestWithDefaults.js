@@ -1,5 +1,5 @@
 const fs = require('fs');
-const request = require('request');
+const request = require('postman-request');
 const config = require('../config/config');
 
 const _configFieldIsValid = (field) => typeof field === 'string' && field.length > 0;
@@ -68,15 +68,15 @@ const createRequestWithDefaults = (Logger) => {
     if (![200].includes(roundedStatus)) {
       const requestError = Error('Request Error');
       requestError.status = statusCode;
-      requestError.description = body;
-      requestError.requestOptions = requestOptions;
+      requestError.description = JSON.stringify(body);
+      requestError.requestOptions = JSON.stringify(requestOptions);
       throw requestError;
     }
   };
 
   const requestDefaultsWithInterceptors = requestWithDefaults();
 
-  return requestDefaultsWithInterceptors;
+  return requestDefaultsWithInterceptors
 };
 
 module.exports = createRequestWithDefaults;

@@ -2,6 +2,9 @@ const fp = require('lodash/fp');
 
 const { splitOutIgnoredIps } = require('./dataTransformations');
 const createLookupResults = require('./createLookupResults');
+const queryAgents = require('./queryAgents');
+const queryThreats = require('./queryThreats');
+const addPoliciesToAgents = require('./addPoliciesToAgents');
 
 const getLookupResults = async (entities, options, requestWithDefaults, Logger) => {
 
@@ -14,7 +17,7 @@ const getLookupResults = async (entities, options, requestWithDefaults, Logger) 
     Logger
   );
 
-  const lookupResults = createLookupResults(foundEntities, Logger);
+  const lookupResults = createLookupResults(foundEntities, options, Logger);
 
   return lookupResults.concat(ignoredIpLookupResults);
 };

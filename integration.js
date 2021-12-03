@@ -3,6 +3,9 @@ const fp = require('lodash/fp');
 
 const validateOptions = require('./src/validateOptions');
 const createRequestWithDefaults = require('./src/createRequestWithDefaults');
+const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
+const addThreatToBlocklist = require('./src/addThreatToBlocklist');
+const submitPolicyEdits = require('./src/submitPolicyEdits');
 
 const { getLookupResults } = require('./src/getLookupResults');
 
@@ -15,16 +18,15 @@ const startup = (logger) => {
 
 const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
-
+  options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
+  
   let lookupResults;
   try {
     lookupResults = await getLookupResults(entities, options, requestWithDefaults, Logger);
   } catch (error) {
-    Logger.error({ error }, 'Get Lookup Results Failed');
-    return cb({
-      detail: error.message || 'Command Failed',
-      err: JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)))
-    });
+    const err = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    Logger.error({ error, formattedError: err }, 'Get Lookup Results Failed');
+    return cb({ detail: error.message || 'Command Failed', err });
   }
 
   Logger.trace({ lookupResults }, 'Lookup Results');
@@ -32,8 +34,19 @@ const doLookup = async (entities, options, cb) => {
 };
 
 
+const getOnMessage = {
+  connectOrDisconnectEndpoint,
+  addThreatToBlocklist,
+  submitPolicyEdits
+};
+
+const onMessage = ({ action, data: actionParams }, options, callback) =>
+  getOnMessage[action](actionParams, options, requestWithDefaults, callback, Logger);
+
+
 module.exports = {
-  doLookup,
   startup,
-  validateOptions
+  validateOptions,
+  doLookup,
+  onMessage
 };
