@@ -4,7 +4,7 @@ const reduce = require('lodash/fp/reduce').convert({ cap: false });
 const validateOptions = (options, callback) => {
   const stringOptionsErrorMessages = {
     url: 'You must provide a valid URL from your SentinelOne Account',
-    apiKey: 'You must provide a valid API Key from your SentinelOne Account'
+    apiToken: 'You must provide a valid API Token from your SentinelOne Account'
   };
 
   const stringValidationErrors = _validateStringOptions(
