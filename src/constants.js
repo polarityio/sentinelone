@@ -264,6 +264,11 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   },
 
   {
+    label: 'Ranger Version',
+    path: 'rangerVersion',
+    process: defaultNaProcess
+  },
+  {
     label: 'Storage Name',
     path: 'storageName',
     process: defaultNaProcess

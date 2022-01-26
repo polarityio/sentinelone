@@ -1,4 +1,4 @@
-const { flow, map, get, reduce, size, find, __, filter } = require('lodash/fp');
+const { flow, map, get, reduce, size, find, __, filter, compact, uniq, join, capitalize } = require('lodash/fp');
 const {
   ENDPOINT_DISPLAY_FIELD_PROCESSING,
   THREAT_DISPLAY_FIELD_PROCESSING
@@ -34,13 +34,21 @@ const createLookupResults = (foundEntities, options, Logger) =>
 
 const createSummary = ({ threats, agents }) => {
   const unresolvedThreatsCount = flow(
-    filter((threat) => get(`['Incident Status'].value`, threat) === 'Unresolved'),
+    filter((threat) => get(`['Incident Status'].value`, threat) === 'unresolved'),
     size
   )(threats);
 
   const malicousThreatsCount = flow(
-    filter((threat) => get(`['AI Confidence Level'].value`, threat) === 'Undefined'),
+    filter((threat) => get(`['AI Confidence Level'].value`, threat) === 'malicious'),
     size
+  )(threats);
+
+  const threatClassifications = flow(
+    map(flow(get(`['Classification'].value`), capitalize)),
+    uniq,
+    join(', '),
+    (threatClassifications) =>
+      threatClassifications && `Threat Classifications: ${threatClassifications}`
   )(threats);
 
   const unhealthyEndpoints = flow(
@@ -48,10 +56,45 @@ const createSummary = ({ threats, agents }) => {
     size
   )(agents);
 
+  const deviceTypes = flow(
+    map(flow(get(`['Device Type'].value`), capitalize)),
+    uniq,
+    join(', '),
+    (deviceTypes) => deviceTypes && `Device Types: ${deviceTypes}`
+  )(agents);
+
+  const diskScanStatuses = flow(
+    map(flow(get(`['Full Disk Scan'].value`), capitalize)),
+    uniq,
+    join(', '),
+    (discScanStatuses) => discScanStatuses && `Disk Scan Statuses: ${discScanStatuses}`
+  )(agents);
+
+  const networkStatuses = flow(
+    map(flow(get(`['Network Status'].value`), capitalize)),
+    uniq,
+    join(', '),
+    (networkStatuses) =>
+      networkStatuses && `Network Statuses: ${networkStatuses}`
+  )(agents);
+
+  const managementConnectivity = flow(
+    map(flow(get(`['Management Connectivity'].value`), capitalize)),
+    uniq,
+    join(', '),
+    (managementConnectivity) =>
+      managementConnectivity && `Management Connectivity: ${managementConnectivity}`
+  )(agents);
+
   return []
     .concat(unresolvedThreatsCount ? `Unresolved Threats: ${unresolvedThreatsCount}` : [])
-    .concat(malicousThreatsCount ? `Malicous Threats: ${malicousThreatsCount}` : [])
-    .concat(unhealthyEndpoints ? `Unhealthy Endpoints: ${unhealthyEndpoints}` : []);
+    .concat(malicousThreatsCount ? `Malicious Threats: ${malicousThreatsCount}` : [])
+    .concat(unhealthyEndpoints ? `Unhealthy Endpoints: ${unhealthyEndpoints}` : [])
+    .concat(threatClassifications || [])
+    .concat(deviceTypes || [])
+    .concat(diskScanStatuses || [])
+    .concat(networkStatuses || [])
+    .concat(managementConnectivity || []);
 };
 
 const formatQueryResult = (foundAgents, foundThreats, globalPolicy, options, Logger) => {
@@ -59,14 +102,16 @@ const formatQueryResult = (foundAgents, foundThreats, globalPolicy, options, Log
     get('endpointFieldsToDisplay'),
     map(({ value }) =>
       find(({ label }) => label === value, ENDPOINT_DISPLAY_FIELD_PROCESSING)
-    )
+    ),
+    compact
   )(options);
 
   const selectedThreatProcessingFields = flow(
     get('threatFieldsToDisplay'),
     map(({ value }) =>
       find(({ label }) => label === value, THREAT_DISPLAY_FIELD_PROCESSING)
-    )
+    ),
+    compact
   )(options);
 
   return {
