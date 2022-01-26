@@ -182,6 +182,7 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   { label: 'Group', path: 'groupName' },
   { label: 'Domain', path: 'domain' },
   { label: 'Console Visible IP', path: 'externalIp' },
+  { label: 'Is Decommissioned', path: 'isDecommissioned' },
   { label: 'Agent Version', path: 'agentVersion' },
   { label: 'Last Active', path: 'lastActiveDate', date: true },
   { label: 'Registered On', path: 'registeredAt', date: true },

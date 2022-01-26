@@ -1,4 +1,4 @@
-const { get, size, getOr, flow, concat, uniqBy } = require('lodash/fp');
+const { get, size, getOr, flow, concat, uniqBy, orderBy } = require('lodash/fp');
 
 const queryAgents = async (
   entity,
@@ -7,7 +7,8 @@ const queryAgents = async (
   requestWithDefaults,
   Logger,
   nextCursor,
-  aggAgents = []
+  aggAgents = [],
+  isDecommissioned = false
 ) => {
   const { data, pagination } = getOr(
     { data: [], pagination: {} },
@@ -23,7 +24,8 @@ const queryAgents = async (
                 entity.value,
                 'agentRealtimeInfo.agentComputerName',
                 currentThreat
-              )
+              ),
+              isDecommissioned
             }),
         limit: 100
       },
@@ -43,7 +45,8 @@ const queryAgents = async (
       requestWithDefaults,
       Logger,
       get('nextCursor', pagination),
-      foundAgents
+      foundAgents,
+      isDecommissioned
     );
   }
 
@@ -55,11 +58,26 @@ const queryAgents = async (
       requestWithDefaults,
       Logger,
       get('nextCursor', pagination),
-      foundAgents
+      foundAgents,
+      isDecommissioned
     );
   }
 
-  return foundAgents;
+  if (!isDecommissioned) {
+    return await queryAgents(
+      entity,
+      foundThreats,
+      options,
+      requestWithDefaults,
+      Logger,
+      get('nextCursor', pagination),
+      foundAgents,
+      true
+    );
+  }
+
+
+  return orderBy('isDecommissioned', 'desc')(foundAgents);
 };
 
 module.exports = queryAgents;
