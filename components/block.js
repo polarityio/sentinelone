@@ -289,7 +289,7 @@ polarity.export = PolarityComponent.extend(
           this.get('block.userOptions.endpointFieldsToDisplay').map(({ value }) => value)
         ).map((agent) => {
           const thisUnformattedAgent = this.get('details.unformattedAgents').find(
-            ({ computerName }) => computerName === agent['Endpoint Name'].value
+            ({ computerName }) => computerName === (agent['Endpoint Name'] || {}).value
           );
 
           return Object.assign({}, agent, {
@@ -306,17 +306,23 @@ polarity.export = PolarityComponent.extend(
           this.get('block.userOptions.threatFieldsToDisplay').map(({ value }) => value)
         ).map((threat) => {
           const thisUnformattedThreat = this.get('details.unformattedThreats').find(
-            ({ threatInfo }) =>
-              threatInfo &&
-              (threatInfo.md5 === threat.Hash.value ||
-                threatInfo.sha1 === threat.Hash.value ||
-                threatInfo.sha256 === threat.Hash.value)
+            ({ threatInfo }) =>{
+              if (!threatInfo) return;
+              const threatHashValue = threat && threat.Hash && threat.Hash.value;
+              return (
+                threatInfo.md5 === threatHashValue ||
+                threatInfo.sha1 === threatHashValue ||
+                threatInfo.sha256 === threatHashValue
+              );
+            }
+              
           );
-
+          
+          const { id, blocklistInfo } = thisUnformattedThreat || {};
           return Object.assign({}, threat, {
-            id: thisUnformattedThreat.id,
-            numberOfBlocklistItems: thisUnformattedThreat.blocklistInfo
-              ? thisUnformattedThreat.blocklistInfo.length
+            id: id,
+            numberOfBlocklistItems: blocklistInfo
+              ? blocklistInfo.length
               : 0,
             blocklistScope: (threat['Blocklist Scope'] || {}).value || 'Unknown'
           });
