@@ -1,4 +1,4 @@
-const { map, flow, get, filter, join, capitalize, eq } = require('lodash/fp');
+const { map, flow, get, filter, join, capitalize, eq, size } = require('lodash/fp');
 
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
@@ -64,13 +64,13 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
     label: 'Found in Blocklist',
     path: 'blocklistInfo',
     process: (blocklistInfo) =>
-      blocklistInfo && blocklistInfo.length ? `Yes (${blocklistInfo.length})` : 'No'
+      blocklistInfo && size(blocklistInfo) ? `Yes (${size(blocklistInfo)})` : 'No'
   },
   {
     label: 'Blocklist Scope',
     path: 'blocklistInfo',
     process: (blocklistInfo) =>
-      blocklistInfo && blocklistInfo.length
+      blocklistInfo && size(blocklistInfo)
         ? flow(map(flow(get('scopeName'), capitalize)), join(', '))(blocklistInfo)
         : undefined
   },

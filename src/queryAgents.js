@@ -1,4 +1,4 @@
-const { getOr, flow, concat, uniqBy } = require('lodash/fp');
+const { get, size, getOr, flow, concat, uniqBy } = require('lodash/fp');
 
 const queryAgents = async (
   entity,
@@ -35,26 +35,26 @@ const queryAgents = async (
   );
   const foundAgents = flow(concat(data), uniqBy('id'))(aggAgents);
 
-  if (pagination.nextCursor) {
+  if (get('nextCursor', pagination)) {
     return await queryAgents(
       entity,
       currentThreat ? [currentThreat].concat(foundThreats || []) : [],
       options,
       requestWithDefaults,
       Logger,
-      pagination.nextCursor,
+      get('nextCursor', pagination),
       foundAgents
     );
   }
 
-  if (foundThreats.length) {
+  if (size(foundThreats)) {
     return await queryAgents(
       entity,
       foundThreats,
       options,
       requestWithDefaults,
       Logger,
-      pagination.nextCursor,
+      get('nextCursor', pagination),
       foundAgents
     );
   }
