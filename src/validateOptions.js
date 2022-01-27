@@ -21,6 +21,7 @@ const validateOptions = (options, callback) => {
           message: 'You must accept one or more fields to display'
         }
       : [];
+
   const threatDisplayFieldsError =
     options.threatFieldsToDisplay.value.length === 0
       ? {
@@ -28,7 +29,7 @@ const validateOptions = (options, callback) => {
           message: 'You must accept one or more fields to display'
         }
       : [];
-  
+
   callback(
     null,
     stringValidationErrors

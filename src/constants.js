@@ -1,4 +1,4 @@
-const { map, flow, get, filter, join, capitalize, eq } = require('lodash/fp');
+const { map, flow, get, filter, join, capitalize, eq, size } = require('lodash/fp');
 
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
@@ -64,13 +64,13 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
     label: 'Found in Blocklist',
     path: 'blocklistInfo',
     process: (blocklistInfo) =>
-      blocklistInfo && blocklistInfo.length ? `Yes (${blocklistInfo.length})` : 'No'
+      blocklistInfo && size(blocklistInfo) ? `Yes (${size(blocklistInfo)})` : 'No'
   },
   {
     label: 'Blocklist Scope',
     path: 'blocklistInfo',
     process: (blocklistInfo) =>
-      blocklistInfo && blocklistInfo.length
+      blocklistInfo && size(blocklistInfo)
         ? flow(map(flow(get('scopeName'), capitalize)), join(', '))(blocklistInfo)
         : undefined
   },
@@ -182,6 +182,7 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   { label: 'Group', path: 'groupName' },
   { label: 'Domain', path: 'domain' },
   { label: 'Console Visible IP', path: 'externalIp' },
+  { label: 'Is Decommissioned', path: 'isDecommissioned' },
   { label: 'Agent Version', path: 'agentVersion' },
   { label: 'Last Active', path: 'lastActiveDate', date: true },
   { label: 'Registered On', path: 'registeredAt', date: true },
@@ -262,6 +263,11 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
       operationalState === 'na' ? 'Not disabled' : operationalState
   },
 
+  {
+    label: 'Ranger Version',
+    path: 'rangerVersion',
+    process: defaultNaProcess
+  },
   {
     label: 'Storage Name',
     path: 'storageName',

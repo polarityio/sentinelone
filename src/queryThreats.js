@@ -37,14 +37,14 @@ const queryThreats = async (
     requestWithDefaults
   );
 
-  if (pagination.nextCursor) {
+  if (get('nextCursor', pagination)) {
     return await queryThreats(
       entity,
       currentAgent ? [currentAgent].concat(foundAgents || []) : [],
       options,
       requestWithDefaults,
       Logger,
-      pagination.nextCursor,
+      get('nextCursor', pagination),
       foundThreats
     );
   }
@@ -56,7 +56,7 @@ const queryThreats = async (
       options,
       requestWithDefaults,
       Logger,
-      pagination.nextCursor,
+      get('nextCursor', pagination),
       foundThreats
     );
   }
@@ -138,12 +138,12 @@ const addBlocklistInfoToThreats = async (
 
   const foundBlocklistItems = flow(concat(data), uniqBy('id'))(allBlacklistResults);
 
-  if (pagination.nextCursor) {
+  if (get('nextCursor', pagination)) {
     return await addBlocklistInfoToThreats(
       foundThreats,
       options,
       requestWithDefaults,
-      pagination.nextCursor,
+      get('nextCursor', pagination),
       foundBlocklistItems
     );
   }

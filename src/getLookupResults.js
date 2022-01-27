@@ -40,7 +40,7 @@ const _getFoundEntities = async (
         Logger
       ); 
 
-      foundAgents = !foundAgents.length
+      foundAgents = !fp.size(foundAgents)
         ? await queryAgents(entity, foundThreats, options, requestWithDefaults, Logger)
         : foundAgents;
 
