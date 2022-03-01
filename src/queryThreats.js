@@ -9,7 +9,9 @@ const {
   uniqBy,
   filter,
   map,
-  flow
+  flow,
+  chunk,
+  flatten
 } = require('lodash/fp');
 
 const queryThreats = async (
@@ -31,10 +33,20 @@ const queryThreats = async (
 
   let foundThreats = flow(concat(data), uniqBy('id'))(aggThreats);
 
-  foundThreats = await addBlocklistInfoToThreats(
-    foundThreats,
-    options,
-    requestWithDefaults
+  foundThreats = flatten(
+    await Promise.all(
+      flow(
+        chunk(19),
+        map(
+          async (foundThreatsChunk) =>
+            await addBlocklistInfoToThreats(
+              foundThreatsChunk,
+              options,
+              requestWithDefaults
+            )
+        )
+      )(foundThreats)
+    )
   );
 
   if (get('nextCursor', pagination)) {
@@ -61,6 +73,8 @@ const queryThreats = async (
     );
   }
 
+  Logger.trace({ foundThreats, entity }, 'Found Threats For Entity');
+  
   return uniqBy('id', foundThreats);
 };
 
