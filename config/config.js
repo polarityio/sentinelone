@@ -165,8 +165,7 @@ module.exports = {
   name: 'SentinelOne',
   acronym: 'S1',
   description:
-    'The SentinelOne platform delivers the defenses you need to prevent, detect, and ' +
-    "undo—known and unknown—threats. Polarity's SentinelOne integration allows automated " +
+    "Polarity's SentinelOne integration allows automated " +
     'queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  ' +
     'This integration allows you to Connect and Disconnect Endpoints from your Network, ' +
     'Add Threats to the Blocklist, and Edit Policy Settings.',
