@@ -171,6 +171,7 @@ module.exports = {
     'Add Threats to the Blocklist, and Edit Policy Settings.',
   entityTypes: ['IPv4', 'IPv6', 'domain', 'url', 'hash'],
   defaultColor: 'light-purple',
+  onDemandOnly: true,
   styles: ['./styles/styles.less'],
   block: {
     component: {
