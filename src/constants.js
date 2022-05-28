@@ -281,7 +281,7 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Locations',
     path: 'locations',
-    process: (locations) => locations.map(({ name }) => name).join(', ')
+    process: (locations) => locations ? locations.map(({ name }) => name).join(', ') : 'N/A'
   }
 ];
 
