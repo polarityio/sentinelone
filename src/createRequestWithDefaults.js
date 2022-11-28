@@ -1,6 +1,8 @@
 const fs = require('fs');
+const { identity } = require('lodash/fp');
 const request = require('postman-request');
 const config = require('../config/config');
+const { parseErrorToReadableJSON } = require('./dataTransformations');
 
 const _configFieldIsValid = (field) => typeof field === 'string' && field.length > 0;
 
@@ -69,12 +71,40 @@ const createRequestWithDefaults = (Logger) => {
       const requestError = Error('Request Error');
       requestError.status = statusCode;
       requestError.description = JSON.stringify(body);
-      requestError.requestOptions = JSON.stringify(requestOptions);
+      requestError.requestOptions = JSON.stringify({
+        ...requestOptions,
+        headers: '{*****}'
+      });
       throw requestError;
     }
   };
 
-  const requestDefaultsWithInterceptors = requestWithDefaults();
+  const requestDefaultsWithInterceptors = requestWithDefaults(identity, identity, (error, requestOptions) => {
+    const err = parseErrorToReadableJSON(error);
+    if(err.status === 500) {
+      Logger.error(
+        { requestOptions, err },
+        'Received a 500 from the service on this Request'
+      );
+      return;
+    }
+    if(err.status === 401) {
+      Logger.error(
+        { requestOptions, err },
+        'Received a 401 from the service on this Request'
+      );
+      const formattedError = new Error('Authentication Failed');
+      formattedError.description =
+        "Your API Token provided in the User Options for this integration isn't recognized by SentinelOne.";
+      formattedError.status = err.status;
+      formattedError.SentinelOneResponseBody = err.description;
+      formattedError.stack = err.stack;
+      
+      throw formattedError;
+    }
+
+    throw error;
+  });
 
   return requestDefaultsWithInterceptors
 };

@@ -39,7 +39,7 @@ const cloneDeep = (entity, cache = new WeakMap()) => {
   );
 };
 
-const orderFields = (listOfObjects, fieldsOrder) =>
+const orderFields = (listOfObjects = [], fieldsOrder = []) =>
   listOfObjects.map((obj) =>
     fieldsOrder.reduce(
       (agg, fieldName, i) =>
@@ -275,6 +275,16 @@ polarity.export = PolarityComponent.extend(
         );
       })
     ),
+    orderFieldsByUserOption: function (fieldToOrder, optionName) {
+      const fieldsToDisplay = this.get(`block.userOptions.${optionName}`);
+
+      const fieldsToDisplayValues =
+        fieldsToDisplay && fieldsToDisplay.map(({ value }) => value);
+
+      const fieldsOrderedByUserOption = orderFields(fieldToOrder, fieldsToDisplayValues);
+
+      return fieldsOrderedByUserOption;
+    },
     init() {
       if (!this.get('details.agents').length) {
         this.set('activeTab', 'threats');
@@ -282,31 +292,41 @@ polarity.export = PolarityComponent.extend(
         this.set('endpointToEditPolicyOn', this.get('details.unformattedAgents.0'));
       }
 
-      this.set(
-        'details.agents',
-        orderFields(
-          this.get('details.agents'),
-          this.get('block.userOptions.endpointFieldsToDisplay').map(({ value }) => value)
-        ).map((agent) => {
-          const thisUnformattedAgent = this.get('details.unformattedAgents').find(
-            ({ computerName }) => computerName === (agent['Endpoint Name'] || {}).value
-          );
+      const newAgents = this.orderFieldsByUserOption(
+        this.get('details.agents'),
+        'endpointFieldsToDisplay'
+      );
+
+      const formattedNewAgents =
+        newAgents &&
+        newAgents.map((agent) => {
+          const unformattedAgents = this.get('details.unformattedAgents')
+          const thisUnformattedAgent =
+            unformattedAgents &&
+            unformattedAgents.find(
+              ({ computerName }) => computerName === (agent['Endpoint Name'] || {}).value
+            );
 
           return Object.assign({}, agent, {
             id: thisUnformattedAgent.id,
             endpointName: thisUnformattedAgent.computerName,
             networkStatus: (agent['Network Status'] || {}).value || 'Unknown'
           });
-        })
-      );
-      this.set(
-        'details.threats',
-        orderFields(
-          this.get('details.threats'),
-          this.get('block.userOptions.threatFieldsToDisplay').map(({ value }) => value)
-        ).map((threat) => {
-          const thisUnformattedThreat = this.get('details.unformattedThreats').find(
-            ({ threatInfo }) =>{
+        });
+
+      this.set('details.agents', formattedNewAgents || []);
+
+
+      const oldThreats = this.get('details.threats');
+      const newThreats = this.orderFieldsByUserOption(oldThreats, 'threatFieldsToDisplay');
+
+      const formattedNewThreats =
+        newThreats &&
+        newThreats.map((threat) => {
+          const unformattedThreats =this.get('details.unformattedThreats')
+          const thisUnformattedThreat =
+            unformattedThreats &&
+            unformattedThreats.find(({ threatInfo }) => {
               if (!threatInfo) return;
               const threatHashValue = threat && threat.Hash && threat.Hash.value;
               return (
@@ -314,34 +334,36 @@ polarity.export = PolarityComponent.extend(
                 threatInfo.sha1 === threatHashValue ||
                 threatInfo.sha256 === threatHashValue
               );
-            }
-              
-          );
-          
+            });
+
           const { id, blocklistInfo } = thisUnformattedThreat || {};
+
           return Object.assign({}, threat, {
             id: id,
-            numberOfBlocklistItems: blocklistInfo
-              ? blocklistInfo.length
-              : 0,
+            numberOfBlocklistItems: blocklistInfo ? blocklistInfo.length : 0,
             blocklistScope: (threat['Blocklist Scope'] || {}).value || 'Unknown'
           });
-        })
-      );
+        });
+
+      this.set('details.threats', formattedNewThreats);
 
       this.set(
         'blockingScope',
-        this.get('details.threats').reduce(
-          (agg, x, i) => Object.assign({}, agg, { [i]: 'site' }),
-          {}
-        )
+        formattedNewThreats &&
+          formattedNewThreats.reduce(
+            (agg, x, i) => Object.assign({}, agg, { [i]: 'site' }),
+            {}
+          )
       );
 
       const policySubmission =
         this.get('details.unformattedAgents.0.sitePolicy') || policySubmissionDefaults;
 
       this.set('policySubmission', policySubmission);
-      this.set('defaultPolicySubmission', cloneDeep(policySubmission));
+      this.set(
+        'defaultPolicySubmission',
+        policySubmission && cloneDeep(policySubmission)
+      );
 
       const defaultEngineValues = policySubmission.engines;
 
@@ -351,6 +373,7 @@ polarity.export = PolarityComponent.extend(
 
       this._super(...arguments);
     },
+
     actions: {
       changeTab: function (tabName) {
         this.set('activeTab', tabName);
@@ -378,24 +401,26 @@ polarity.export = PolarityComponent.extend(
             );
             const agents = outerThis.get('details.agents');
 
+            //Modifying the agent's `Network Status` property to reflect the change in network status
+            //Ordering fields based on the user option for consistency with other agent objects
+            const modifiedAgent = Object.assign(
+              {},
+              outerThis.orderFieldsByUserOption(
+                [
+                  Object.assign({}, agent, {
+                    ['Network Status']: { value: networkStatus, capitalize: true }
+                  })
+                ],
+                'endpointFieldsToDisplay'
+              )[0],
+              {
+                networkStatus
+              }
+            );
+
             outerThis.set('details.agents', [
               ...agents.slice(0, index),
-              Object.assign(
-                {},
-                orderFields(
-                  [
-                    Object.assign({}, agent, {
-                      ['Network Status']: { value: networkStatus, capitalize: true }
-                    })
-                  ],
-                  outerThis
-                    .get('block.userOptions.endpointFieldsToDisplay')
-                    .map(({ value }) => value)
-                )[0],
-                {
-                  networkStatus
-                }
-              ),
+              modifiedAgent,
               ...agents.slice(index + 1, agents.length)
             ]);
           })
@@ -453,21 +478,21 @@ polarity.export = PolarityComponent.extend(
         })
           .then(({ newFoundInBlocklist, newBlockingScope }) => {
             outerThis.setMessages(index, 'blocking', 'Successfully Blocked Threat!');
-            const threats = outerThis.get('details.threats');
 
+            const newThreat = outerThis.orderFieldsByUserOption(
+              [
+                Object.assign({}, threat, {
+                  ['Found in Blocklist']: { value: newFoundInBlocklist },
+                  ['Blocklist Scope']: { value: newBlockingScope }
+                })
+              ],
+              'threatFieldsToDisplay'
+            )[0];
+
+            const threats = outerThis.get('details.threats');
             outerThis.set('details.threats', [
               ...threats.slice(0, index),
-              orderFields(
-                [
-                  Object.assign({}, threat, {
-                    ['Found in Blocklist']: { value: newFoundInBlocklist },
-                    ['Blocklist Scope']: { value: newBlockingScope }
-                  })
-                ],
-                outerThis
-                  .get('block.userOptions.threatFieldsToDisplay')
-                  .map(({ value }) => value)
-              )[0],
+              newThreat,
               ...threats.slice(index + 1, threats.length)
             ]);
           })
@@ -519,7 +544,7 @@ polarity.export = PolarityComponent.extend(
               policySubmissionDefaults;
 
         this.set('policySubmission', newPolicy);
-        this.set('defaultPolicySubmission', cloneDeep(newPolicy));
+        this.set('defaultPolicySubmission', newPolicy && cloneDeep(newPolicy));
         const defaultEngineValues = newPolicy.engines;
 
         Object.keys(defaultEngineValues).forEach((defaultEngineKey) =>
@@ -572,10 +597,11 @@ polarity.export = PolarityComponent.extend(
         })
           .then(({}) => {
             outerThis.set('editPolicyMessages', 'Successfully Saved Policy Changes!');
+            const policySubmission = this.get('policySubmission');
             setTimeout(() => {
               outerThis.set(
                 'defaultPolicySubmission',
-                cloneDeep(this.get('policySubmission'))
+                policySubmission && cloneDeep(policySubmission)
               );
               outerThis.get('block').notifyPropertyChange('data');
             }, 5100);

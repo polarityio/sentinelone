@@ -50,9 +50,13 @@ const objectPromiseAll = async (obj = { fn1: async () => {} }) => {
   return zipObject(labels, executedFunctions);
 };
 
+const parseErrorToReadableJSON = (error) =>
+  JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+
 module.exports = {
   getKeys,
   groupEntities,
   splitOutIgnoredIps,
-  objectPromiseAll
+  objectPromiseAll,
+  parseErrorToReadableJSON
 };
