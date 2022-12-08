@@ -21,19 +21,27 @@ The API Token associated with the SentinelOne Account.  Can be created from the 
 ### Allow Connecting and Disconnecting Endpoints
 When checked, users can Connecting and Disconnecting Endpoints from the Network.
 
+> This option must be set to "Users can view only".
+
 ### Allow Adding Threats to Blocklist
 When checked, users can add Threats to all Scope Levels in the Blocklist.
+
+> This option must be set to "Users can view only".
 
 ### Allow Policy Edits
 When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy.
 
+> This option must be set to "Users can view only".
+
 ### Endpoint Display Fields
 The fields you would like displayed on the Endpoints Tab if a value is available.
+
+> This option must be set to "Users can view only".
 
 ### Threat Display Fields
 The fields you would like displayed on the Threats Tab if a value is available.
 
-
+> This option must be set to "Users can view only".
 
 ## Installation Instructions
 

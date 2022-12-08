@@ -218,54 +218,54 @@ module.exports = {
       key: 'allowConnectingAndDisconnectingEndpoints',
       name: 'Allow Connecting and Disconnecting Endpoints',
       description:
-        'When checked, users can Connecting and Disconnecting Endpoints from the Network.',
+        'When checked, users can Connecting and Disconnecting Endpoints from the Network. This option must be set to "Users can view only".',
       default: true,
       type: 'boolean',
       userCanEdit: false,
-      adminOnly: true
+      adminOnly: false
     },
     {
       key: 'allowAddingThreatsToBlocklist',
       name: 'Allow Adding Threats to Blocklist',
       description:
-        'When checked, users can add Threats to all Scope Levels in the Blocklist.',
+        'When checked, users can add Threats to all Scope Levels in the Blocklist. This option must be set to "Users can view only".',
       default: true,
       type: 'boolean',
       userCanEdit: false,
-      adminOnly: true
+      adminOnly: false
     },
     {
       key: 'allowPolicyEdits',
       name: 'Allow Policy Edits',
       description:
-        'When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy.',
+        'When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy. This option must be set to "Users can view only".',
       default: true,
       type: 'boolean',
       userCanEdit: false,
-      adminOnly: true
+      adminOnly: false
     },
     {
       key: 'endpointFieldsToDisplay',
       name: 'Endpoint Display Fields',
       description:
-        'The fields you would like displayed on the Endpoints Tab if a value is available.',
+        'The fields you would like displayed on the Endpoints Tab if a value is available. This option must be set to "Users can view only".',
       default: DEFAULT_ENDPOINT_DISPLAY_FIELDS,
       type: 'select',
       options: ALL_ENDPOINT_DISPLAY_FIELDS,
       multiple: true,
-      userCanEdit: true,
+      userCanEdit: false,
       adminOnly: false
     },
     {
       key: 'threatFieldsToDisplay',
       name: 'Threat Display Fields',
       description:
-        'The fields you would like displayed on the Threats Tab if a value is available.',
+        'The fields you would like displayed on the Threats Tab if a value is available. This option must be set to "Users can view only".',
       default: DEFAULT_THREAT_DISPLAY_FIELDS,
       type: 'select',
       options: ALL_THREAT_DISPLAY_FIELDS,
       multiple: true,
-      userCanEdit: true,
+      userCanEdit: false,
       adminOnly: false
     }
   ]

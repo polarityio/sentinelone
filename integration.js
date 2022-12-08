@@ -6,6 +6,7 @@ const createRequestWithDefaults = require('./src/createRequestWithDefaults');
 const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
 const addThreatToBlocklist = require('./src/addThreatToBlocklist');
 const submitPolicyEdits = require('./src/submitPolicyEdits');
+const { parseErrorToReadableJSON } = require('./src/dataTransformations');
 
 const { getLookupResults } = require('./src/getLookupResults');
 
@@ -19,20 +20,25 @@ const startup = (logger) => {
 const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
   options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
-  
+
   let lookupResults;
   try {
-    lookupResults = await getLookupResults(entities, options, requestWithDefaults, Logger);
+    lookupResults = await getLookupResults(
+      entities,
+      options,
+      requestWithDefaults,
+      Logger
+    );
   } catch (error) {
-    const err = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    const err = parseErrorToReadableJSON(error);
     Logger.error({ error, formattedError: err }, 'Get Lookup Results Failed');
+
     return cb({ detail: error.message || 'Command Failed', err });
   }
 
   Logger.trace({ lookupResults }, 'Lookup Results');
   cb(null, lookupResults);
 };
-
 
 const getOnMessage = {
   connectOrDisconnectEndpoint,
@@ -42,7 +48,6 @@ const getOnMessage = {
 
 const onMessage = ({ action, data: actionParams }, options, callback) =>
   getOnMessage[action](actionParams, options, requestWithDefaults, callback, Logger);
-
 
 module.exports = {
   startup,
