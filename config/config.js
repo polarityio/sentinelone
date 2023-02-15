@@ -82,6 +82,20 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'queryType',
+      name: 'Query Type',
+      description: 'The type(s) of data we query from Sentinel One',
+      default: { display: 'Threats & Endpoints', value: 'both' },
+      type: 'select',
+      options: [
+        { display: 'Threats & Endpoints', value: 'both' },
+        { display: 'Threats', value: 'threats' },
+        { display: 'Endpoints', value: 'endpoints' }
+      ],
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
       key: 'endpointFieldsToDisplay',
       name: 'Endpoint Display Fields',
       description:

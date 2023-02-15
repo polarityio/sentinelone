@@ -1,4 +1,4 @@
-const { map, flow, get, filter, join, capitalize, eq, size } = require('lodash/fp');
+const { map, flow, get, filter, join, capitalize, eq, size, uniq } = require('lodash/fp');
 
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
@@ -62,16 +62,16 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   },
   {
     label: 'Found in Blocklist',
-    path: 'blocklistInfo',
-    process: (blocklistInfo) =>
-      blocklistInfo && size(blocklistInfo) ? `Yes (${size(blocklistInfo)})` : 'No'
+    path: 'blocklistInfoCount',
+    process: (blocklistInfoCount) =>
+      blocklistInfoCount ? `Yes (${blocklistInfoCount})` : 'No'
   },
   {
     label: 'Blocklist Scope',
     path: 'blocklistInfo',
     process: (blocklistInfo) =>
       blocklistInfo && size(blocklistInfo)
-        ? flow(map(flow(get('scopeName'), capitalize)), join(', '))(blocklistInfo)
+        ? flow(map(flow(get('scopeName'), capitalize)), uniq, join(', '))(blocklistInfo)
         : undefined
   },
   {
@@ -281,12 +281,16 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Locations',
     path: 'locations',
-    process: (locations) => locations ? locations.map(({ name }) => name).join(', ') : 'N/A'
+    process: (locations) =>
+      locations ? locations.map(({ name }) => name).join(', ') : 'N/A'
   }
 ];
+
+const MAX_PAGE_SIZE = 30;
 
 module.exports = {
   IGNORED_IPS,
   THREAT_DISPLAY_FIELD_PROCESSING,
-  ENDPOINT_DISPLAY_FIELD_PROCESSING
+  ENDPOINT_DISPLAY_FIELD_PROCESSING,
+  MAX_PAGE_SIZE
 };

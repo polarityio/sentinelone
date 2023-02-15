@@ -1,38 +1,66 @@
-const { flow, map, get, reduce, size, find, __, filter, compact, uniq, join, capitalize } = require('lodash/fp');
+const {
+  flow,
+  map,
+  get,
+  reduce,
+  size,
+  find,
+  __,
+  filter,
+  compact,
+  uniq,
+  join,
+  capitalize
+} = require('lodash/fp');
 const {
   ENDPOINT_DISPLAY_FIELD_PROCESSING,
-  THREAT_DISPLAY_FIELD_PROCESSING
+  THREAT_DISPLAY_FIELD_PROCESSING,
+  MAX_PAGE_SIZE
 } = require('./constants');
 
-const createLookupResults = (foundEntities, options, Logger) =>
-  map(({ entity, foundAgents, foundThreats, globalPolicy }) => {
-    let lookupResult;
-    if (size(foundAgents) || size(foundThreats)) {
-      const formattedQueryResult = formatQueryResult(
-        foundAgents,
-        foundThreats,
-        globalPolicy,
-        options,
-        Logger
-      );
+const assembleLookupResults = (foundEntities, options, Logger) =>
+  map(
+    ({
+      entity,
+      foundAgents,
+      foundThreats,
+      globalPolicy,
+      foundAgentsCount,
+      foundThreatsCount
+    }) => {
+      let lookupResult;
+      if (size(foundAgents) || size(foundThreats)) {
+        const formattedQueryResult = formatQueryResult(
+          foundAgents,
+          foundThreats,
+          globalPolicy,
+          options,
+          Logger
+        );
 
-      lookupResult = {
-        entity,
-        data: {
-          summary: createSummary(formattedQueryResult),
-          details: formattedQueryResult
-        }
-      };
-    } else {
-      lookupResult = {
-        entity,
-        data: null
-      };
-    }
-    return lookupResult;
-  }, foundEntities);
+        lookupResult = {
+          entity,
+          data: {
+            summary: createSummary(
+              formattedQueryResult,
+              foundAgentsCount,
+              foundThreatsCount
+            ),
+            details: formattedQueryResult
+          }
+        };
+      } else {
+        lookupResult = {
+          entity,
+          data: null
+        };
+      }
+      return lookupResult;
+    },
+    foundEntities
+  );
 
-const createSummary = ({ threats, agents }) => {
+const createSummary = ({ threats, agents }, foundAgentsCount, foundThreatsCount) => {
   const unresolvedThreatsCount = flow(
     filter((threat) => get(`['Incident Status'].value`, threat) === 'unresolved'),
     size
@@ -74,8 +102,7 @@ const createSummary = ({ threats, agents }) => {
     map(flow(get(`['Network Status'].value`), capitalize)),
     uniq,
     join(', '),
-    (networkStatuses) =>
-      networkStatuses && `Network Statuses: ${networkStatuses}`
+    (networkStatuses) => networkStatuses && `Network Statuses: ${networkStatuses}`
   )(agents);
 
   const managementConnectivity = flow(
@@ -90,6 +117,8 @@ const createSummary = ({ threats, agents }) => {
     .concat(unresolvedThreatsCount ? `Unresolved Threats: ${unresolvedThreatsCount}` : [])
     .concat(malicousThreatsCount ? `Malicious Threats: ${malicousThreatsCount}` : [])
     .concat(unhealthyEndpoints ? `Unhealthy Endpoints: ${unhealthyEndpoints}` : [])
+    .concat(foundAgentsCount ? `Endpoints: ${foundAgentsCount}`:[])
+    .concat(foundThreatsCount ? `Threats: ${foundThreatsCount}`:[])
     .concat(threatClassifications || [])
     .concat(deviceTypes || [])
     .concat(diskScanStatuses || [])
@@ -127,7 +156,8 @@ const formatQueryResult = (foundAgents, foundThreats, globalPolicy, options, Log
       options
     ),
     unformattedAgents: foundAgents,
-    unformattedThreats: foundThreats
+    unformattedThreats: foundThreats,
+    maxPageSize: MAX_PAGE_SIZE
   };
 };
 
@@ -162,4 +192,4 @@ const getDisplayValue = (valuePath, foundItem, possiblePaths, process) =>
       )(foundItem)
     : get(possiblePaths ? find(get(__, foundItem), possiblePaths) : valuePath, foundItem);
 
-module.exports = createLookupResults;
+module.exports = assembleLookupResults;

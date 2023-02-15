@@ -230,6 +230,8 @@ polarity.export = PolarityComponent.extend(
     timezone: Ember.computed('Intl', function () {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
     }),
+    threatCountMinusOne: 0,
+    agentCountMinusOne: 0,
     blockingScope: {},
     connectOrDisconnectMessages: {},
     connectOrDisconnectErrorMessages: {},
@@ -292,6 +294,7 @@ polarity.export = PolarityComponent.extend(
         this.set('endpointToEditPolicyOn', this.get('details.unformattedAgents.0'));
       }
 
+      // Agents
       const newAgents = this.orderFieldsByUserOption(
         this.get('details.agents'),
         'endpointFieldsToDisplay'
@@ -314,9 +317,11 @@ polarity.export = PolarityComponent.extend(
           });
         });
 
+      this.set('agentCountMinusOne', this.get('details.unformattedAgents').length -1)
+
       this.set('details.agents', formattedNewAgents || []);
 
-
+      // Threats
       const oldThreats = this.get('details.threats');
       const newThreats = this.orderFieldsByUserOption(oldThreats, 'threatFieldsToDisplay');
 
@@ -347,6 +352,8 @@ polarity.export = PolarityComponent.extend(
 
       this.set('details.threats', formattedNewThreats);
 
+      this.set('threatCountMinusOne', this.get('details.unformattedThreats').length -1)
+
       this.set(
         'blockingScope',
         formattedNewThreats &&
@@ -356,6 +363,7 @@ polarity.export = PolarityComponent.extend(
           )
       );
 
+      // Policy
       const policySubmission =
         this.get('details.unformattedAgents.0.sitePolicy') || policySubmissionDefaults;
 

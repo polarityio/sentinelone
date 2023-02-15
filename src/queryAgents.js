@@ -1,33 +1,19 @@
-const { get, size, getOr, flow, concat, uniqBy, orderBy } = require('lodash/fp');
+const { getOr, flow, uniqBy, orderBy } = require('lodash/fp');
+const { MAX_PAGE_SIZE } = require('./constants');
 
-const queryAgents = async (
-  entity,
-  [currentThreat, ...foundThreats],
-  options,
-  requestWithDefaults,
-  Logger,
-  nextCursor,
-  aggAgents = [],
-  isDecommissioned = false
-) => {
-  const { data, pagination } = getOr(
-    { data: [], pagination: {} },
+const queryAgents = async (entity, options, requestWithDefaults, Logger) => {
+  const {
+    data,
+    pagination: { totalItems: foundAgentsCount }
+  } = getOr(
+    { data: [], pagination: { totalItems: 0 } },
     'body',
     await requestWithDefaults({
       method: 'GET',
       url: `${options.url}/web/api/v2.1/agents`,
       qs: {
-        ...(nextCursor
-          ? { cursor: nextCursor }
-          : {
-              query: getOr(
-                entity.value,
-                'agentRealtimeInfo.agentComputerName',
-                currentThreat
-              ),
-              isDecommissioned
-            }),
-        limit: 100
+        query: entity.value,
+        limit: MAX_PAGE_SIZE
       },
       headers: {
         Authorization: `ApiToken ${options.apiToken}`
@@ -35,49 +21,15 @@ const queryAgents = async (
       json: true
     })
   );
-  const foundAgents = flow(concat(data), uniqBy('id'))(aggAgents);
 
-  if (get('nextCursor', pagination)) {
-    return await queryAgents(
-      entity,
-      currentThreat ? [currentThreat].concat(foundThreats || []) : [],
-      options,
-      requestWithDefaults,
-      Logger,
-      get('nextCursor', pagination),
-      foundAgents,
-      isDecommissioned
-    );
-  }
+  const foundAgents = flow(uniqBy('id'), orderBy('isDecommissioned', 'desc'))(data);
 
-  if (size(foundThreats)) {
-    return await queryAgents(
-      entity,
-      foundThreats,
-      options,
-      requestWithDefaults,
-      Logger,
-      get('nextCursor', pagination),
-      foundAgents,
-      isDecommissioned
-    );
-  }
+  Logger.trace({ foundAgents, foundAgentsCount, entity }, 'Found Agents For Entity');
 
-  if (!isDecommissioned) {
-    return await queryAgents(
-      entity,
-      foundThreats,
-      options,
-      requestWithDefaults,
-      Logger,
-      get('nextCursor', pagination),
-      foundAgents,
-      true
-    );
-  }
-
-
-  return orderBy('isDecommissioned', 'desc')(foundAgents);
+  return {
+    foundAgents,
+    foundAgentsCount
+  };
 };
 
 module.exports = queryAgents;

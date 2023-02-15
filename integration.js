@@ -6,9 +6,15 @@ const createRequestWithDefaults = require('./src/createRequestWithDefaults');
 const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
 const addThreatToBlocklist = require('./src/addThreatToBlocklist');
 const submitPolicyEdits = require('./src/submitPolicyEdits');
-const { parseErrorToReadableJSON } = require('./src/dataTransformations');
+const {
+  splitOutIgnoredIps,
+  parseErrorToReadableJSON,
+  organizeEntities
+} = require('./src/dataTransformations');
 
-const { getLookupResults } = require('./src/getLookupResults');
+const searchEntities = require('./src/searchEntities');
+const assembleLookupResults = require('./src/assembleLookupResults');
+
 
 let Logger;
 let requestWithDefaults;
@@ -23,21 +29,27 @@ const doLookup = async (entities, options, cb) => {
 
   let lookupResults;
   try {
-    lookupResults = await getLookupResults(
-      entities,
+    const { searchableEntities, nonSearchableEntities } = organizeEntities(entities);
+
+    const foundEntities = await searchEntities(
+      searchableEntities,
       options,
       requestWithDefaults,
       Logger
     );
+
+    lookupResults = assembleLookupResults(foundEntities, options, Logger);
+    
+    const ignoreResults = buildIgnoreResults(nonSearchableEntities);
+
+    Logger.trace({ lookupResults, ignoreResults }, 'Lookup Results');
+    cb(null, lookupResults.concat(ignoreResults));
   } catch (error) {
     const err = parseErrorToReadableJSON(error);
     Logger.error({ error, formattedError: err }, 'Get Lookup Results Failed');
 
-    return cb({ detail: error.message || 'Command Failed', err });
+    return cb({ detail: error.message || 'Search Failed', err });
   }
-
-  Logger.trace({ lookupResults }, 'Lookup Results');
-  cb(null, lookupResults);
 };
 
 const getOnMessage = {
