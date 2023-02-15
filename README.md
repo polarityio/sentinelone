@@ -33,6 +33,9 @@ When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on th
 
 > This option must be set to "Users can view only".
 
+### Query Type
+The type(s) of data we query from Sentinel One.
+
 ### Endpoint Display Fields
 The fields you would like displayed on the Endpoints Tab if a value is available.
 
