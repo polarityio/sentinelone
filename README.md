@@ -9,6 +9,7 @@ Polarity's SentinelOne integration allows automated queries of Endpoints and Thr
 
 To learn more about SentinelOne, visit the [official website](https://www.sentinelone.com/).
 
+> ***NOTE:*** We are searching each entity for Threat in a ways specific to the entity's type.  Meaning IP Addresses are searched using the `filePath__contains` query field, Hashes are searched by `contentHashes` query field, and Domains/URLs are searched by `threatDetails__contains` query field.  This may cause Threats that contain entities not found in these fields to not show results when searching.
 
 ## SentinelOne Integration Options
 

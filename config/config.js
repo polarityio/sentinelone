@@ -92,6 +92,7 @@ module.exports = {
         { display: 'Threats', value: 'threats' },
         { display: 'Endpoints', value: 'endpoints' }
       ],
+      multiple: false,
       userCanEdit: false,
       adminOnly: false
     },

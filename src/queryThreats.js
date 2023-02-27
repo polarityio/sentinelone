@@ -32,8 +32,7 @@ const queryThreats = async (entity, options, requestWithDefaults, Logger) => {
       url: `${options.url}/web/api/v2.1/threats`,
       qs: {
         // query: entity.value,
-        threatDetails__contains: entity.value, // TODO: Test if filters use And logic, and if so might need to use query again, in which case choose query or only one field
-        [entityTypeToFilterKey(entity.type)]: entity.value,
+        [entityTypeToFilterKey(entity)]: entity.value,
         limit: MAX_PAGE_SIZE
       },
       headers: {
@@ -45,10 +44,11 @@ const queryThreats = async (entity, options, requestWithDefaults, Logger) => {
 
   const foundThreats = uniqBy('id', data);
 
-  const foundThreatWithBlocklistInfo = batchAddBlocklistInfoToThreats(
+  const foundThreatWithBlocklistInfo = await batchAddBlocklistInfoToThreats(
     foundThreats,
     options,
-    requestWithDefaults
+    requestWithDefaults,
+    Logger
   );
 
   Logger.trace(
@@ -65,7 +65,8 @@ const queryThreats = async (entity, options, requestWithDefaults, Logger) => {
 const batchAddBlocklistInfoToThreats = async (
   foundThreats,
   options,
-  requestWithDefaults
+  requestWithDefaults,
+  Logger
 ) =>
   flatten(
     await Promise.all(
@@ -76,21 +77,32 @@ const batchAddBlocklistInfoToThreats = async (
             await addBlocklistInfoToThreats(
               foundThreatsChunk,
               options,
-              requestWithDefaults
+              requestWithDefaults,
+              Logger
             )
         )
       )(foundThreats)
     )
   );
-const addBlocklistInfoToThreats = async (foundThreats, options, requestWithDefaults) => {
+const addBlocklistInfoToThreats = async (
+  foundThreats,
+  options,
+  requestWithDefaults,
+  Logger
+) => {
+  foundThreats = map(
+    (threat) => ({
+      ...threat,
+      hash: getPossiblePaths(
+        ['threatInfo.md5', 'threatInfo.sha1', 'threatInfo.sha256'],
+        threat
+      )
+    }),
+    foundThreats
+  );
+
   const value__contains = flow(
-    map(
-      (threat) =>
-        `"${getPossiblePaths(
-          ['threatInfo.md5', 'threatInfo.sha1', 'threatInfo.sha256'],
-          threat
-        )}"`
-    ),
+    map(flow(get('hash'), (hash) => `"${hash}"`)),
     join(',')
   )(foundThreats);
 

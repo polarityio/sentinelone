@@ -7,14 +7,13 @@ const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint')
 const addThreatToBlocklist = require('./src/addThreatToBlocklist');
 const submitPolicyEdits = require('./src/submitPolicyEdits');
 const {
-  splitOutIgnoredIps,
   parseErrorToReadableJSON,
-  organizeEntities
+  organizeEntities,
+  buildIgnoreResults
 } = require('./src/dataTransformations');
 
 const searchEntities = require('./src/searchEntities');
 const assembleLookupResults = require('./src/assembleLookupResults');
-
 
 let Logger;
 let requestWithDefaults;
@@ -39,7 +38,7 @@ const doLookup = async (entities, options, cb) => {
     );
 
     lookupResults = assembleLookupResults(foundEntities, options, Logger);
-    
+
     const ignoreResults = buildIgnoreResults(nonSearchableEntities);
 
     Logger.trace({ lookupResults, ignoreResults }, 'Lookup Results');
