@@ -3,6 +3,7 @@ const fp = require('lodash/fp');
 
 const validateOptions = require('./src/validateOptions');
 const createRequestWithDefaults = require('./src/createRequestWithDefaults');
+const getPolicies = require('./src/getPolicies');
 const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
 const addThreatToBlocklist = require('./src/addThreatToBlocklist');
 const submitPolicyEdits = require('./src/submitPolicyEdits');
@@ -52,6 +53,7 @@ const doLookup = async (entities, options, cb) => {
 };
 
 const getOnMessage = {
+  getPolicies,
   connectOrDisconnectEndpoint,
   addThreatToBlocklist,
   submitPolicyEdits

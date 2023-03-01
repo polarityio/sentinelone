@@ -17,17 +17,12 @@ const searchEntities = async (entities, options, requestWithDefaults, Logger) =>
           ? await queryAgents(entity, options, requestWithDefaults, Logger)
           : { foundAgents: [], foundAgentsCount: 0 };
 
-      const { globalPolicy, foundAgentsWithPolicies } = options.allowPolicyEdits
-        ? await addPoliciesToAgents(foundAgents, options, requestWithDefaults, Logger)
-        : { globalPolicy: {}, foundAgentsWithPolicies: foundAgents };
-
       return {
         entity,
-        foundAgents: foundAgentsWithPolicies,
+        foundAgents,
         foundAgentsCount,
         foundThreats,
-        foundThreatsCount,
-        globalPolicy
+        foundThreatsCount
       };
     }, entities)
   );

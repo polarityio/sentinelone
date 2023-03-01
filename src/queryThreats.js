@@ -11,7 +11,8 @@ const {
   flow,
   chunk,
   flatten,
-  size
+  size,
+  toLower
 } = require('lodash/fp');
 const { MAX_PAGE_SIZE } = require('./constants');
 
@@ -32,7 +33,7 @@ const queryThreats = async (entity, options, requestWithDefaults, Logger) => {
       url: `${options.url}/web/api/v2.1/threats`,
       qs: {
         // query: entity.value,
-        [entityTypeToFilterKey(entity)]: entity.value,
+        [entityTypeToFilterKey(entity)]: flow(get('value'), toLower)(entity),
         limit: MAX_PAGE_SIZE
       },
       headers: {

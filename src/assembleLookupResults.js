@@ -24,7 +24,6 @@ const assembleLookupResults = (foundEntities, options, Logger) =>
       entity,
       foundAgents,
       foundThreats,
-      globalPolicy,
       foundAgentsCount,
       foundThreatsCount
     }) => {
@@ -33,7 +32,6 @@ const assembleLookupResults = (foundEntities, options, Logger) =>
         const formattedQueryResult = formatQueryResult(
           foundAgents,
           foundThreats,
-          globalPolicy,
           options,
           Logger
         );
@@ -126,7 +124,7 @@ const createSummary = ({ threats, agents }, foundAgentsCount, foundThreatsCount)
     .concat(managementConnectivity || []);
 };
 
-const formatQueryResult = (foundAgents, foundThreats, globalPolicy, options, Logger) => {
+const formatQueryResult = (foundAgents, foundThreats, options, Logger) => {
   const selectedEndpointProcessingFields = flow(
     get('endpointFieldsToDisplay'),
     map(({ value }) =>
@@ -144,7 +142,6 @@ const formatQueryResult = (foundAgents, foundThreats, globalPolicy, options, Log
   )(options);
 
   return {
-    globalPolicy,
     agents: getDisplayFieldsFromOptions(
       foundAgents,
       selectedEndpointProcessingFields,

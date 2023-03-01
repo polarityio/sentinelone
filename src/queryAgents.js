@@ -1,4 +1,4 @@
-const { getOr, flow, uniqBy, orderBy } = require('lodash/fp');
+const { getOr, flow, uniqBy, orderBy, toLower, get } = require('lodash/fp');
 const { MAX_PAGE_SIZE } = require('./constants');
 
 const queryAgents = async (entity, options, requestWithDefaults, Logger) => {
@@ -12,7 +12,7 @@ const queryAgents = async (entity, options, requestWithDefaults, Logger) => {
       method: 'GET',
       url: `${options.url}/web/api/v2.1/agents`,
       qs: {
-        query: entity.value,
+        query: flow(get('value'), toLower)(entity),
         limit: MAX_PAGE_SIZE
       },
       headers: {
