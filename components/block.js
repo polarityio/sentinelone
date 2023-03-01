@@ -257,6 +257,7 @@ polarity.export = PolarityComponent.extend(
     gettingPoliciesMessage: '',
     gettingPoliciesErrorMessage: '',
     getPoliciesIsRunning: false,
+    hasQueriedBlocklists: false,
     interactionDisabled: Ember.computed(
       'editPolicyIsRunning',
       'editPolicyMessages',
@@ -369,6 +370,8 @@ polarity.export = PolarityComponent.extend(
             {}
           )
       );
+
+      this.set('hasQueriedBlocklists', this.get('block.userOptions.queryType.value').includes('Blocklists'));
 
       this._super(...arguments);
     },

@@ -220,7 +220,7 @@
               {{/if}}
             </span>
           </h1>
-          {{#if block.userOptions.allowAddingThreatsToBlocklist}}
+          {{#if (and block.userOptions.allowAddingThreatsToBlocklist hasQueriedBlocklists)}}
             {{#if (and (eq threat.blocklistScope "Unknown") numberOfBlocklistItems)}}
               <p class="enable-action-message">
                 To enable Adding Threats to the Blocklist in this integration on this

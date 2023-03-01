@@ -12,7 +12,8 @@ const {
   chunk,
   flatten,
   size,
-  toLower
+  toLower,
+  includes
 } = require('lodash/fp');
 const { MAX_PAGE_SIZE } = require('./constants');
 
@@ -43,22 +44,26 @@ const queryThreats = async (entity, options, requestWithDefaults, Logger) => {
     })
   );
 
-  const foundThreats = uniqBy('id', data);
+  let foundThreats = uniqBy('id', data);
 
-  const foundThreatWithBlocklistInfo = await batchAddBlocklistInfoToThreats(
-    foundThreats,
-    options,
-    requestWithDefaults,
-    Logger
-  );
+  if(flow(get('queryType.value'), includes('Blocklist'))(options)) {
+    const foundThreatWithBlocklistInfo = await batchAddBlocklistInfoToThreats(
+      foundThreats,
+      options,
+      requestWithDefaults,
+      Logger
+    );
+
+    foundThreats = foundThreatWithBlocklistInfo;
+  }
 
   Logger.trace(
-    { foundThreatWithBlocklistInfo, foundThreatsCount, entity },
+    { foundThreats, foundThreatsCount, entity },
     'Found Threats For Entity'
   );
 
   return {
-    foundThreats: foundThreatWithBlocklistInfo,
+    foundThreats,
     foundThreatsCount
   };
 };

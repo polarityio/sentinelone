@@ -75,6 +75,11 @@ const objectPromiseAll = async (obj = { fn1: async () => {} }) => {
 const parseErrorToReadableJSON = (error) =>
   JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
+const and =
+  (...[func, ...funcs]) =>
+  (x) =>
+    func(x) && (funcs.length ? and(...funcs)(x) : true);
+    
 module.exports = {
   getKeys,
   groupEntities,
@@ -82,5 +87,6 @@ module.exports = {
   objectPromiseAll,
   parseErrorToReadableJSON,
   organizeEntities,
-  buildIgnoreResults
+  buildIgnoreResults,
+  and
 };

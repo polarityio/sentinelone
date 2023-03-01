@@ -55,12 +55,14 @@ module.exports = {
       key: 'queryType',
       name: 'Query Type',
       description: 'The type(s) of data we query from Sentinel One',
-      default: { display: 'Threats & Endpoints', value: 'both' },
+      default: { display: 'Threats & Endpoints', value: 'Threats & Endpoints' },
       type: 'select',
       options: [
-        { display: 'Threats & Endpoints', value: 'both' },
-        { display: 'Threats', value: 'threats' },
-        { display: 'Endpoints', value: 'endpoints' }
+        { display: 'Threats & Endpoints', value: 'Threats & Endpoints' },
+        { display: 'Threats & Blocklists & Endpoints', value: 'Threats & Blocklists & Endpoints' },
+        { display: 'Threats', value: 'Threats' },
+        { display: 'Threats & Blocklists', value: 'Threats & Blocklists' },
+        { display: 'Endpoints', value: 'Endpoints' }
       ],
       multiple: false,
       userCanEdit: false,
