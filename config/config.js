@@ -6,7 +6,7 @@ module.exports = {
     'queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  ' +
     'This integration allows you to Connect and Disconnect Endpoints from your Network, ' +
     'Add Threats to the Blocklist, and Edit Policy Settings.',
-  entityTypes: ['IPv4', 'IPv6', 'domain', 'url', 'hash'],
+  entityTypes: ['IPv4', 'IPv6', 'domain', 'hash'],
   defaultColor: 'light-purple',
   onDemandOnly: true,
   styles: ['./styles/styles.less'],
@@ -52,36 +52,6 @@ module.exports = {
       adminOnly: true
     },
     {
-      key: 'allowConnectingAndDisconnectingEndpoints',
-      name: 'Allow Connecting and Disconnecting Endpoints',
-      description:
-        'When checked, users can Connecting and Disconnecting Endpoints from the Network. This option must be set to "Users can view only".',
-      default: true,
-      type: 'boolean',
-      userCanEdit: false,
-      adminOnly: false
-    },
-    {
-      key: 'allowAddingThreatsToBlocklist',
-      name: 'Allow Adding Threats to Blocklist',
-      description:
-        'When checked, users can add Threats to all Scope Levels in the Blocklist. This option must be set to "Users can view only".',
-      default: true,
-      type: 'boolean',
-      userCanEdit: false,
-      adminOnly: false
-    },
-    {
-      key: 'allowPolicyEdits',
-      name: 'Allow Policy Edits',
-      description:
-        'When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy. This option must be set to "Users can view only".',
-      default: true,
-      type: 'boolean',
-      userCanEdit: false,
-      adminOnly: false
-    },
-    {
       key: 'queryType',
       name: 'Query Type',
       description: 'The type(s) of data we query from Sentinel One',
@@ -93,6 +63,36 @@ module.exports = {
         { display: 'Endpoints', value: 'endpoints' }
       ],
       multiple: false,
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'allowConnectingAndDisconnectingEndpoints',
+      name: 'Allow Connecting and Disconnecting Endpoints',
+      description:
+        'When checked, users can Connecting and Disconnecting Endpoints from the Network. This option must be set to "Users can view only".',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'allowAddingThreatsToBlocklist',
+      name: 'Allow Adding Threats to Blocklist',
+      description:
+        'When checked, users can add Threats to all Scope Levels in the Blocklist. This option must be set to "Users can view only".',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'allowPolicyEdits',
+      name: 'Allow Policy Edits',
+      description:
+        'When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy. This option must be set to "Users can view only".',
+      default: false,
+      type: 'boolean',
       userCanEdit: false,
       adminOnly: false
     },
