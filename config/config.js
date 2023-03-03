@@ -59,7 +59,10 @@ module.exports = {
       type: 'select',
       options: [
         { display: 'Threats & Endpoints', value: 'Threats & Endpoints' },
-        { display: 'Threats & Blocklists & Endpoints', value: 'Threats & Blocklists & Endpoints' },
+        {
+          display: 'Threats & Blocklists & Endpoints',
+          value: 'Threats & Blocklists & Endpoints'
+        },
         { display: 'Threats', value: 'Threats' },
         { display: 'Threats & Blocklists', value: 'Threats & Blocklists' },
         { display: 'Endpoints', value: 'Endpoints' }
@@ -67,6 +70,26 @@ module.exports = {
       multiple: false,
       userCanEdit: false,
       adminOnly: false
+    },
+    {
+      key: 'maxConcurrent',
+      name: 'Max Concurrent Requests',
+      description:
+        'Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 15.',
+      default: 15,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'minTime',
+      name: 'Minimum Time Between Lookups',
+      description:
+        'Minimum amount of time in milliseconds between lookups (defaults to 250).  Integration must be restarted after changing this option. Defaults to 250.',
+      default: 250,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'allowConnectingAndDisconnectingEndpoints',

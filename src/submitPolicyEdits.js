@@ -16,10 +16,11 @@ const submitPolicyEdits = async (
           : `${policyEditScope}s/${endpointToEditPolicyOn[`${policyEditScope}Id`]}/policy`
       }`,
       headers: {
-        Authorization: `ApiToken ${options.apiToken}`,
         'Content-Type': 'application/json'
       },
       body: { data: policySubmission },
+      options,
+      onMessage: true,
       json: true
     });
 

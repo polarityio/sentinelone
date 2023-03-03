@@ -226,6 +226,8 @@ const descriptions = {
 polarity.export = PolarityComponent.extend(
   Object.assign(descriptions, {
     details: Ember.computed.alias('block.data.details'),
+    //This summary computed variable is required for retry logic
+    summary: Ember.computed.alias('block.data.summary'),
     activeTab: 'endpoints',
     timezone: Ember.computed('Intl', function () {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -292,7 +294,7 @@ polarity.export = PolarityComponent.extend(
 
       return fieldsOrderedByUserOption;
     },
-    init() {
+    initializeFields: function () {
       if (!this.get('details.agents').length) {
         this.set('activeTab', 'threats');
       } else {
@@ -312,7 +314,8 @@ polarity.export = PolarityComponent.extend(
           const thisUnformattedAgent =
             unformattedAgents &&
             unformattedAgents.find(
-              ({ computerName }) => computerName === (agent['Endpoint Name'] || {}).value
+              ({ computerName }) =>
+                computerName === (agent['Endpoint Name'] || {}).value
             );
 
           return Object.assign({}, agent, {
@@ -360,7 +363,10 @@ polarity.export = PolarityComponent.extend(
 
       this.set('details.threats', formattedNewThreats);
 
-      this.set('threatCountMinusOne', this.get('details.unformattedThreats').length - 1);
+      this.set(
+        'threatCountMinusOne',
+        this.get('details.unformattedThreats').length - 1
+      );
 
       this.set(
         'blockingScope',
@@ -371,7 +377,15 @@ polarity.export = PolarityComponent.extend(
           )
       );
 
-      this.set('hasQueriedBlocklists', this.get('block.userOptions.queryType.value').includes('Blocklists'));
+      this.set(
+        'hasQueriedBlocklists',
+        this.get('block.userOptions.queryType.value').includes('Blocklists')
+      );
+    },
+    init() {
+      if (!this.get('details.errorMessage')) {
+        this.initializeFields();
+      }
 
       this._super(...arguments);
     },
@@ -440,6 +454,27 @@ polarity.export = PolarityComponent.extend(
         if (tabName === 'editPolicy' && !this.get('policiesHaveBeenObtained'))
           this.getPolicies();
       },
+      retryLookup: function () {
+        this.set('running', true);
+        this.set('errorMessage', '');
+        this.sendIntegrationMessage({
+          action: 'retryLookup',
+          data: { entity: this.get('block.entity') }
+        })
+          .then((result) => {
+            if (result.data.summary) this.set('summary', result.summary);
+            this.set('block.data', result.data);
+            this.initializeFields();
+          })
+          .catch((err) => {
+            this.set('details.errorMessage', JSON.stringify(err, null, 4));
+          })
+          .finally(() => {
+            this.set('running', false);
+            this.get('block').notifyPropertyChange('data');
+
+          });
+      },
       connectOrDisconnectEndpoint: function (agent, index) {
         const outerThis = this;
 
@@ -449,7 +484,10 @@ polarity.export = PolarityComponent.extend(
 
         this.sendIntegrationMessage({
           action: 'connectOrDisconnectEndpoint',
-          data: { id: agent.id, networkStatus: agent.networkStatus }
+          data: {
+            id: agent.id,
+            networkStatus: agent.networkStatus
+          }
         })
           .then(({ networkStatus }) => {
             outerThis.setMessages(

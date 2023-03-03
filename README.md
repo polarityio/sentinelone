@@ -19,6 +19,15 @@ The URL of the SentinelOne instance you would like to connect to (including http
 ### API Token
 The API Token associated with the SentinelOne Account.  Can be created from the Username Dropdown from Upper Right -> "My User" -> "Options" Dropdown.
 
+### Query Type
+The type(s) of data we query from Sentinel One.
+
+### Max Concurrent Requests
+Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 15.
+
+### Minimum Time Between Lookups
+Minimum amount of time in milliseconds between lookups (defaults to 250).  Integration must be restarted after changing this option. Defaults to 250.
+
 ### Allow Connecting and Disconnecting Endpoints
 When checked, users can Connecting and Disconnecting Endpoints from the Network.
 
@@ -33,9 +42,6 @@ When checked, users can add Threats to all Scope Levels in the Blocklist.
 When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy.
 
 > This option must be set to "Users can view only".
-
-### Query Type
-The type(s) of data we query from Sentinel One.
 
 ### Endpoint Display Fields
 The fields you would like displayed on the Endpoints Tab if a value is available.

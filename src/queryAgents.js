@@ -15,9 +15,7 @@ const queryAgents = async (entity, options, requestWithDefaults, Logger) => {
         query: flow(get('value'), toLower)(entity),
         limit: MAX_PAGE_SIZE
       },
-      headers: {
-        Authorization: `ApiToken ${options.apiToken}`
-      },
+      options,
       json: true
     })
   );

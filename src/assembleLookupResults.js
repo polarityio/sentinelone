@@ -25,9 +25,13 @@ const assembleLookupResults = (foundEntities, options, Logger) =>
       foundAgents,
       foundThreats,
       foundAgentsCount,
-      foundThreatsCount
+      foundThreatsCount,
+      retry
     }) => {
       let lookupResult;
+      
+      if (retry) return retry;
+
       if (size(foundAgents) || size(foundThreats)) {
         const formattedQueryResult = formatQueryResult(
           foundAgents,

@@ -21,6 +21,20 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   { label: 'Analyst Verdict', path: 'threatInfo.analystVerdictDescription' },
   { label: 'Incident Status', path: 'threatInfo.incidentStatusDescription' },
   {
+    label: 'Found in Blocklist',
+    path: 'blocklistInfoCount',
+    process: (blocklistInfoCount) =>
+      blocklistInfoCount ? `Yes (${blocklistInfoCount})` : 'No'
+  },
+  {
+    label: 'Blocklist Scope',
+    path: 'blocklistInfo',
+    process: (blocklistInfo) =>
+      blocklistInfo && size(blocklistInfo)
+        ? flow(map(flow(get('scopeName'), capitalize)), uniq, join(', '))(blocklistInfo)
+        : undefined
+  },
+  {
     label: 'Endpoints',
     path: 'agentRealtimeInfo.agentComputerName',
     link: ({ agentRealtimeInfo: { agentComputerName }, url }) =>
@@ -59,20 +73,6 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
         map(flow(get('action'), capitalize)),
         join(', ')
       )(mitigationStatuses)
-  },
-  {
-    label: 'Found in Blocklist',
-    path: 'blocklistInfoCount',
-    process: (blocklistInfoCount) =>
-      blocklistInfoCount ? `Yes (${blocklistInfoCount})` : 'No'
-  },
-  {
-    label: 'Blocklist Scope',
-    path: 'blocklistInfo',
-    process: (blocklistInfo) =>
-      blocklistInfo && size(blocklistInfo)
-        ? flow(map(flow(get('scopeName'), capitalize)), uniq, join(', '))(blocklistInfo)
-        : undefined
   },
   {
     label: 'Pending Actions',

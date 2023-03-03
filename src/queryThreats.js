@@ -37,9 +37,7 @@ const queryThreats = async (entity, options, requestWithDefaults, Logger) => {
         [entityTypeToFilterKey(entity)]: flow(get('value'), toLower)(entity),
         limit: MAX_PAGE_SIZE
       },
-      headers: {
-        Authorization: `ApiToken ${options.apiToken}`
-      },
+      options,
       json: true
     })
   );
@@ -124,9 +122,7 @@ const addBlocklistInfoToThreats = async (
         includeParents: true,
         limit: MAX_PAGE_SIZE * MAX_THREAT_PARALLEL_PROCESS_SIZE
       },
-      headers: {
-        Authorization: `ApiToken ${options.apiToken}`
-      },
+      options,
       json: true
     })
   );

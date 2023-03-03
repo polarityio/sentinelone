@@ -1,12 +1,11 @@
 'use strict';
-const fp = require('lodash/fp');
-
 const validateOptions = require('./src/validateOptions');
 const createRequestWithDefaults = require('./src/createRequestWithDefaults');
 const getPolicies = require('./src/getPolicies');
 const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
 const addThreatToBlocklist = require('./src/addThreatToBlocklist');
 const submitPolicyEdits = require('./src/submitPolicyEdits');
+const retryLookup = require('./src/retryLookup');
 const {
   parseErrorToReadableJSON,
   organizeEntities,
@@ -27,7 +26,6 @@ const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
   options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
 
-  let lookupResults;
   try {
     const { searchableEntities, nonSearchableEntities } = organizeEntities(entities);
 
@@ -38,7 +36,7 @@ const doLookup = async (entities, options, cb) => {
       Logger
     );
 
-    lookupResults = assembleLookupResults(foundEntities, options, Logger);
+    const lookupResults = assembleLookupResults(foundEntities, options, Logger);
 
     const ignoreResults = buildIgnoreResults(nonSearchableEntities);
 
@@ -47,7 +45,7 @@ const doLookup = async (entities, options, cb) => {
   } catch (error) {
     const err = parseErrorToReadableJSON(error);
     Logger.error({ error, formattedError: err }, 'Get Lookup Results Failed');
-
+    
     return cb({ detail: error.message || 'Search Failed', err });
   }
 };
@@ -56,7 +54,8 @@ const getOnMessage = {
   getPolicies,
   connectOrDisconnectEndpoint,
   addThreatToBlocklist,
-  submitPolicyEdits
+  submitPolicyEdits,
+  retryLookup
 };
 
 const onMessage = ({ action, data: actionParams }, options, callback) =>
