@@ -167,13 +167,13 @@ const getDisplayFieldsFromOptions = (foundItems, displayFields, options) =>
     (foundItem) =>
       reduce(
         (agg, { label, path, possiblePaths, process, link, ...fieldProperties }) => {
-          const displayValue = getDisplayValue(path, foundItem, possiblePaths, process);
+          const displayValue = getDisplayValue(path, foundItem, possiblePaths, process, options);
           return displayValue
             ? {
                 ...agg,
                 [label]: {
                   value: displayValue,
-                  ...(link && { link: link({ ...foundItem, ...options }) }),
+                  ...(link && { link: link(foundItem, options ) }),
                   ...fieldProperties
                 }
               }
@@ -185,11 +185,11 @@ const getDisplayFieldsFromOptions = (foundItems, displayFields, options) =>
     foundItems
   );
 
-const getDisplayValue = (valuePath, foundItem, possiblePaths, process) =>
+const getDisplayValue = (valuePath, foundItem, possiblePaths, process, options) =>
   process
     ? flow(
         get(possiblePaths ? find(get(__, foundItem), possiblePaths) : valuePath),
-        process
+        fieldValue => process(fieldValue, options),
       )(foundItem)
     : get(possiblePaths ? find(get(__, foundItem), possiblePaths) : valuePath, foundItem);
 

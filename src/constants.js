@@ -1,4 +1,4 @@
-const { map, flow, get, filter, join, capitalize, eq, size, uniq } = require('lodash/fp');
+const { map, flow, get, filter, join, capitalize, eq, size, uniq, includes } = require('lodash/fp');
 
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
@@ -10,7 +10,7 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Threat Details',
     path: 'threatInfo.threatName',
-    link: ({ threatInfo: { threatId }, url }) =>
+    link: ({ threatInfo: { threatId } }, { url }) =>
       `${url}/incidents/threats/${threatId}/overview`
   },
   {
@@ -23,8 +23,12 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Found in Blocklist',
     path: 'blocklistInfoCount',
-    process: (blocklistInfoCount) =>
-      blocklistInfoCount ? `Yes (${blocklistInfoCount})` : 'No'
+    process: (blocklistInfoCount, options) =>
+      flow(get('queryType.value'), includes('Blocklist'))(options)
+        ? blocklistInfoCount
+          ? `Yes (${blocklistInfoCount})`
+          : 'No'
+        : undefined
   },
   {
     label: 'Blocklist Scope',
@@ -37,7 +41,7 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Endpoints',
     path: 'agentRealtimeInfo.agentComputerName',
-    link: ({ agentRealtimeInfo: { agentComputerName }, url }) =>
+    link: ({ agentRealtimeInfo: { agentComputerName } }, { url }) =>
       `${url}/sentinels/devices?page=1&filter={"computerName__contains":"\"${agentComputerName}\""}`
   },
   {
@@ -173,7 +177,7 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Endpoint Name',
     path: 'computerName',
-    link: ({ computerName, url }) =>
+    link: ({ computerName }, { url }) =>
       `${url}/sentinels/devices?page=1&filter={"computerName__contains":"\"${computerName}\""}`
   },
   { label: 'Account', path: 'accountName' },
