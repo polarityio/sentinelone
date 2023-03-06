@@ -1,44 +1,36 @@
 const { getOr } = require('lodash/fp');
+const addPoliciesToAgents = require('./addPoliciesToAgents');
 
-const submitPolicyEdits = async (
-  { policySubmission, endpointToEditPolicyOn, policyEditScope },
+const getPolicies = async (
+  { foundAgents },
   options,
   requestWithDefaults,
   callback,
   Logger
 ) => {
   try {
-    await requestWithDefaults({
-      method: 'PUT',
-      url: `${options.url}/web/api/v2.1/${
-        policyEditScope === 'global'
-          ? 'tenant/policy'
-          : `${policyEditScope}s/${endpointToEditPolicyOn[`${policyEditScope}Id`]}/policy`
-      }`,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: { data: policySubmission },
+    const { globalPolicy, foundAgentsWithPolicies } = await addPoliciesToAgents(
+      foundAgents,
       options,
-      onMessage: true,
-      json: true
-    });
+      requestWithDefaults,
+      Logger
+    );
 
-    callback(null, {});
+    callback(null, { globalPolicy, foundAgentsWithPolicies });
   } catch (error) {
     const err = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
     Logger.error(
       {
-        detail: 'Failed to Submit Policy Edit Changes',
+        detail: 'Failed to Getting Policies',
         options,
         formattedError: err
       },
-      'Submit Policy Edit Changes Failed'
+      'Getting Policies Failed'
     );
     const { title, detail, code } = getOr(
       {
         title: error.message,
-        detail: 'Saving Policy Changes Unsuccessful',
+        detail: 'Getting Policies was Unsuccessful',
         code: error.status
       },
       'errors.0',
@@ -59,4 +51,4 @@ const submitPolicyEdits = async (
   }
 };
 
-module.exports = submitPolicyEdits;
+module.exports = getPolicies;

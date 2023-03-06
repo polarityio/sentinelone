@@ -16,10 +16,11 @@ const connectOrDisconnectEndpoint = async (
           : 'connect'
       }`,
       headers: {
-        Authorization: `ApiToken ${options.apiToken}`,
         'Content-Type': 'application/json'
       },
       body: { filter: { ids: [endpointId] } },
+      options,
+      onMessage: true,
       json: true
     });
 

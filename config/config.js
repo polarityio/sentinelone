@@ -6,7 +6,7 @@ module.exports = {
     'queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  ' +
     'This integration allows you to Connect and Disconnect Endpoints from your Network, ' +
     'Add Threats to the Blocklist, and Edit Policy Settings.',
-  entityTypes: ['IPv4', 'IPv6', 'domain', 'url', 'hash'],
+  entityTypes: ['IPv4', 'IPv6', 'domain', 'hash'],
   defaultColor: 'light-purple',
   onDemandOnly: true,
   styles: ['./styles/styles.less'],
@@ -52,11 +52,51 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'queryType',
+      name: 'Query Type',
+      description: 'The type(s) of data we query from Sentinel One',
+      default: { display: 'Threats & Endpoints', value: 'Threats & Endpoints' },
+      type: 'select',
+      options: [
+        { display: 'Threats & Endpoints', value: 'Threats & Endpoints' },
+        {
+          display: 'Threats & Blocklists & Endpoints',
+          value: 'Threats & Blocklists & Endpoints'
+        },
+        { display: 'Threats', value: 'Threats' },
+        { display: 'Threats & Blocklists', value: 'Threats & Blocklists' },
+        { display: 'Endpoints', value: 'Endpoints' }
+      ],
+      multiple: false,
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'maxConcurrent',
+      name: 'Max Concurrent Requests',
+      description:
+        'Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 15.',
+      default: 15,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'minTime',
+      name: 'Minimum Time Between Lookups',
+      description:
+        'Minimum amount of time in milliseconds between lookups (defaults to 250).  Integration must be restarted after changing this option. Defaults to 250.',
+      default: 250,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'allowConnectingAndDisconnectingEndpoints',
       name: 'Allow Connecting and Disconnecting Endpoints',
       description:
         'When checked, users can Connecting and Disconnecting Endpoints from the Network. This option must be set to "Users can view only".',
-      default: true,
+      default: false,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
@@ -66,7 +106,7 @@ module.exports = {
       name: 'Allow Adding Threats to Blocklist',
       description:
         'When checked, users can add Threats to all Scope Levels in the Blocklist. This option must be set to "Users can view only".',
-      default: true,
+      default: false,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
@@ -76,7 +116,7 @@ module.exports = {
       name: 'Allow Policy Edits',
       description:
         'When checked, users can Edit Policy Fields on Accounts, Sites, Groups, and on the Global Policy. This option must be set to "Users can view only".',
-      default: true,
+      default: false,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
@@ -179,6 +219,8 @@ module.exports = {
         { display: 'AI Confidence Level', value: 'AI Confidence Level' },
         { display: 'Analyst Verdict', value: 'Analyst Verdict' },
         { display: 'Incident Status', value: 'Incident Status' },
+        { display: 'Found in Blocklist', value: 'Found in Blocklist' },
+        { display: 'Blocklist Scope', value: 'Blocklist Scope' },
         { display: 'Endpoints', value: 'Endpoints' },
         { display: 'Reported Time', value: 'Reported Time' },
         { display: 'Detecting Engine', value: 'Detecting Engine' },
@@ -187,8 +229,6 @@ module.exports = {
         { display: 'Hash', value: 'Hash' },
         { display: 'Path', value: 'Path' },
         { display: 'Completed Actions', value: 'Completed Actions' },
-        { display: 'Found in Blocklist', value: 'Found in Blocklist' },
-        { display: 'Blocklist Scope', value: 'Blocklist Scope' },
         { display: 'Pending Actions', value: 'Pending Actions' },
         { display: 'Reboot Required', value: 'Reboot Required' },
         { display: 'Failed Actions', value: 'Failed Actions' },
@@ -209,6 +249,8 @@ module.exports = {
         { display: 'AI Confidence Level', value: 'AI Confidence Level' },
         { display: 'Analyst Verdict', value: 'Analyst Verdict' },
         { display: 'Incident Status', value: 'Incident Status' },
+        { display: 'Found in Blocklist', value: 'Found in Blocklist' },
+        { display: 'Blocklist Scope', value: 'Blocklist Scope' },
         { display: 'Endpoints', value: 'Endpoints' },
         { display: 'EndPoint IPv4 Address', value: 'EndPoint IPv4 Address' },
         { display: 'EndPoint IPv6 Address', value: 'EndPoint IPv6 Address' },
@@ -226,9 +268,6 @@ module.exports = {
         { display: 'Hash', value: 'Hash' },
         { display: 'Path', value: 'Path' },
         { display: 'Completed Actions', value: 'Completed Actions' },
-        { display: 'Found in Blocklist', value: 'Found in Blocklist' },
-        { display: 'Blocklist Scope', value: 'Blocklist Scope' },
-
         { display: 'Pending Actions', value: 'Pending Actions' },
         { display: 'Reboot Required', value: 'Reboot Required' },
         { display: 'Failed Actions', value: 'Failed Actions' },

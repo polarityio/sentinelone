@@ -1,10 +1,27 @@
-const _ = require("lodash");
+const _ = require('lodash');
 const { keys, values, zipObject, map } = require('lodash/fp');
-
 
 const { IGNORED_IPS } = require('./constants');
 
+const organizeEntities = (entities) => {
+  const isNotIgnoredIp = (isIP, value) => !isIP || (isIP && !IGNORED_IPS.has(value));
 
+  const { searchableEntities, nonSearchableEntities } = _.groupBy(
+    entities,
+    ({ isIP, value }) =>
+      isNotIgnoredIp(isIP, value) ? 'searchableEntities' : 'nonSearchableEntities'
+  );
+
+  return {
+    searchableEntities,
+    nonSearchableEntities
+  };
+};
+
+const buildIgnoreResults = map((entity) => ({
+  entity,
+  data: null
+}));
 
 const getKeys = (keys, items) =>
   Array.isArray(items)
@@ -14,17 +31,22 @@ const getKeys = (keys, items) =>
 const groupEntities = (entities) =>
   _.chain(entities)
     .groupBy(({ isIP, isDomain, type }) =>
-      isIP ? "ip" : 
-      isDomain ? "domain" : 
-      type === "MAC" ? "mac" : 
-      type === "MD5" ? "md5" : 
-      type === "SHA1" ? "sha1" : 
-      type === "SHA256" ? "sha256" : 
-      "unknown"
+      isIP
+        ? 'ip'
+        : isDomain
+        ? 'domain'
+        : type === 'MAC'
+        ? 'mac'
+        : type === 'MD5'
+        ? 'md5'
+        : type === 'SHA1'
+        ? 'sha1'
+        : type === 'SHA256'
+        ? 'sha256'
+        : 'unknown'
     )
-    .omit("unknown")
+    .omit('unknown')
     .value();
-
 
 const splitOutIgnoredIps = (_entitiesPartition) => {
   const { ignoredIPs, entitiesPartition } = _.groupBy(
@@ -53,10 +75,18 @@ const objectPromiseAll = async (obj = { fn1: async () => {} }) => {
 const parseErrorToReadableJSON = (error) =>
   JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
+const and =
+  (...[func, ...funcs]) =>
+  (x) =>
+    func(x) && (funcs.length ? and(...funcs)(x) : true);
+    
 module.exports = {
   getKeys,
   groupEntities,
   splitOutIgnoredIps,
   objectPromiseAll,
-  parseErrorToReadableJSON
+  parseErrorToReadableJSON,
+  organizeEntities,
+  buildIgnoreResults,
+  and
 };

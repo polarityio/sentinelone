@@ -1,14 +1,19 @@
 'use strict';
-const fp = require('lodash/fp');
-
 const validateOptions = require('./src/validateOptions');
 const createRequestWithDefaults = require('./src/createRequestWithDefaults');
+const getPolicies = require('./src/getPolicies');
 const connectOrDisconnectEndpoint = require('./src/connectOrDisconnectEndpoint');
 const addThreatToBlocklist = require('./src/addThreatToBlocklist');
 const submitPolicyEdits = require('./src/submitPolicyEdits');
-const { parseErrorToReadableJSON } = require('./src/dataTransformations');
+const retryLookup = require('./src/retryLookup');
+const {
+  parseErrorToReadableJSON,
+  organizeEntities,
+  buildIgnoreResults
+} = require('./src/dataTransformations');
 
-const { getLookupResults } = require('./src/getLookupResults');
+const searchEntities = require('./src/searchEntities');
+const assembleLookupResults = require('./src/assembleLookupResults');
 
 let Logger;
 let requestWithDefaults;
@@ -21,29 +26,36 @@ const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
   options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
 
-  let lookupResults;
   try {
-    lookupResults = await getLookupResults(
-      entities,
+    const { searchableEntities, nonSearchableEntities } = organizeEntities(entities);
+
+    const foundEntities = await searchEntities(
+      searchableEntities,
       options,
       requestWithDefaults,
       Logger
     );
+
+    const lookupResults = assembleLookupResults(foundEntities, options, Logger);
+
+    const ignoreResults = buildIgnoreResults(nonSearchableEntities);
+
+    Logger.trace({ lookupResults, ignoreResults }, 'Lookup Results');
+    cb(null, lookupResults.concat(ignoreResults));
   } catch (error) {
     const err = parseErrorToReadableJSON(error);
     Logger.error({ error, formattedError: err }, 'Get Lookup Results Failed');
-
-    return cb({ detail: error.message || 'Command Failed', err });
+    
+    return cb({ detail: error.message || 'Search Failed', err });
   }
-
-  Logger.trace({ lookupResults }, 'Lookup Results');
-  cb(null, lookupResults);
 };
 
 const getOnMessage = {
+  getPolicies,
   connectOrDisconnectEndpoint,
   addThreatToBlocklist,
-  submitPolicyEdits
+  submitPolicyEdits,
+  retryLookup
 };
 
 const onMessage = ({ action, data: actionParams }, options, callback) =>
