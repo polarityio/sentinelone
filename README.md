@@ -9,6 +9,7 @@ Polarity's SentinelOne integration allows automated queries of Endpoints and Thr
 
 To learn more about SentinelOne, visit the [official website](https://www.sentinelone.com/).
 
+> ***NOTE:*** We are searching each entity for Threat in a ways specific to the entity's type.  Meaning IP Addresses are searched using the `filePath__contains` query field, Hashes are searched by `contentHashes` query field, and Domains/URLs are searched by `threatDetails__contains` query field.  This may cause Threats that contain entities not found in these fields to not show results when searching.
 
 ## SentinelOne Integration Options
 
@@ -17,6 +18,15 @@ The URL of the SentinelOne instance you would like to connect to (including http
 
 ### API Token
 The API Token associated with the SentinelOne Account.  Can be created from the Username Dropdown from Upper Right -> "My User" -> "Options" Dropdown.
+
+### Query Type
+The type(s) of data we query from Sentinel One.
+
+### Max Concurrent Requests
+Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 15.
+
+### Minimum Time Between Lookups
+Minimum amount of time in milliseconds between lookups (defaults to 250).  Integration must be restarted after changing this option. Defaults to 250.
 
 ### Allow Connecting and Disconnecting Endpoints
 When checked, users can Connecting and Disconnecting Endpoints from the Network.

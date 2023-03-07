@@ -7,9 +7,8 @@ const getPolicy = async (id, policyType, options, requestWithDefaults) =>
     await requestWithDefaults({
       method: 'GET',
       url: `${options.url}/web/api/v2.1/${policyType}/${id}/policy`,
-      headers: {
-        Authorization: `ApiToken ${options.apiToken}`
-      },
+      options,
+      onMessage: true,
       json: true
     })
   );
@@ -63,9 +62,8 @@ const addPoliciesToAgents = async (foundAgents, options, requestWithDefaults, Lo
     await requestWithDefaults({
       method: 'GET',
       url: `${options.url}/web/api/v2.1/tenant/policy`,
-      headers: {
-        Authorization: `ApiToken ${options.apiToken}`
-      },
+      options,
+      onMessage: true,
       json: true
     })
   );

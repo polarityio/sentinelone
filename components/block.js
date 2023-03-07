@@ -226,10 +226,14 @@ const descriptions = {
 polarity.export = PolarityComponent.extend(
   Object.assign(descriptions, {
     details: Ember.computed.alias('block.data.details'),
+    //This summary computed variable is required for retry logic
+    summary: Ember.computed.alias('block.data.summary'),
     activeTab: 'endpoints',
     timezone: Ember.computed('Intl', function () {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
     }),
+    threatCountMinusOne: 0,
+    agentCountMinusOne: 0,
     blockingScope: {},
     connectOrDisconnectMessages: {},
     connectOrDisconnectErrorMessages: {},
@@ -251,6 +255,11 @@ polarity.export = PolarityComponent.extend(
     expandableTitleStates: {},
     policyStateNotChanged: true,
     policyEditScope: 'site',
+    policiesHaveBeenObtained: false,
+    gettingPoliciesMessage: '',
+    gettingPoliciesErrorMessage: '',
+    getPoliciesIsRunning: false,
+    hasQueriedBlocklists: false,
     interactionDisabled: Ember.computed(
       'editPolicyIsRunning',
       'editPolicyMessages',
@@ -285,13 +294,14 @@ polarity.export = PolarityComponent.extend(
 
       return fieldsOrderedByUserOption;
     },
-    init() {
+    initializeFields: function () {
       if (!this.get('details.agents').length) {
         this.set('activeTab', 'threats');
       } else {
         this.set('endpointToEditPolicyOn', this.get('details.unformattedAgents.0'));
       }
 
+      // Agents
       const newAgents = this.orderFieldsByUserOption(
         this.get('details.agents'),
         'endpointFieldsToDisplay'
@@ -300,11 +310,12 @@ polarity.export = PolarityComponent.extend(
       const formattedNewAgents =
         newAgents &&
         newAgents.map((agent) => {
-          const unformattedAgents = this.get('details.unformattedAgents')
+          const unformattedAgents = this.get('details.unformattedAgents');
           const thisUnformattedAgent =
             unformattedAgents &&
             unformattedAgents.find(
-              ({ computerName }) => computerName === (agent['Endpoint Name'] || {}).value
+              ({ computerName }) =>
+                computerName === (agent['Endpoint Name'] || {}).value
             );
 
           return Object.assign({}, agent, {
@@ -314,16 +325,21 @@ polarity.export = PolarityComponent.extend(
           });
         });
 
+      this.set('agentCountMinusOne', this.get('details.unformattedAgents').length - 1);
+
       this.set('details.agents', formattedNewAgents || []);
 
-
+      // Threats
       const oldThreats = this.get('details.threats');
-      const newThreats = this.orderFieldsByUserOption(oldThreats, 'threatFieldsToDisplay');
+      const newThreats = this.orderFieldsByUserOption(
+        oldThreats,
+        'threatFieldsToDisplay'
+      );
 
       const formattedNewThreats =
         newThreats &&
         newThreats.map((threat) => {
-          const unformattedThreats =this.get('details.unformattedThreats')
+          const unformattedThreats = this.get('details.unformattedThreats');
           const thisUnformattedThreat =
             unformattedThreats &&
             unformattedThreats.find(({ threatInfo }) => {
@@ -348,6 +364,11 @@ polarity.export = PolarityComponent.extend(
       this.set('details.threats', formattedNewThreats);
 
       this.set(
+        'threatCountMinusOne',
+        this.get('details.unformattedThreats').length - 1
+      );
+
+      this.set(
         'blockingScope',
         formattedNewThreats &&
           formattedNewThreats.reduce(
@@ -356,27 +377,103 @@ polarity.export = PolarityComponent.extend(
           )
       );
 
-      const policySubmission =
-        this.get('details.unformattedAgents.0.sitePolicy') || policySubmissionDefaults;
-
-      this.set('policySubmission', policySubmission);
       this.set(
-        'defaultPolicySubmission',
-        policySubmission && cloneDeep(policySubmission)
+        'hasQueriedBlocklists',
+        this.get('block.userOptions.queryType.value').includes('Blocklists')
       );
-
-      const defaultEngineValues = policySubmission.engines;
-
-      Object.keys(defaultEngineValues).forEach((defaultEngineKey) =>
-        this.set(defaultEngineKey, defaultEngineValues[defaultEngineKey] === 'on')
-      );
+    },
+    init() {
+      if (!this.get('details.errorMessage')) {
+        this.initializeFields();
+      }
 
       this._super(...arguments);
     },
 
+    getPolicies: function () {
+      const outerThis = this;
+
+      this.set('gettingPoliciesMessage', '');
+      this.set('gettingPoliciesErrorMessage', '');
+      this.set('getPoliciesIsRunning', true);
+
+      this.sendIntegrationMessage({
+        action: 'getPolicies',
+        data: {
+          foundAgents: this.get('details.unformattedAgents')
+        }
+      })
+        .then(({ globalPolicy, foundAgentsWithPolicies }) => {
+          this.set('details.globalPolicy', globalPolicy);
+
+          this.get('details.unformattedAgents', foundAgentsWithPolicies);
+
+          this.set('endpointToEditPolicyOn', foundAgentsWithPolicies[0]);
+          const policySubmission =
+            foundAgentsWithPolicies[0].sitePolicy || cloneDeep(policySubmissionDefaults);
+
+          this.set('policySubmission', policySubmission);
+          this.set(
+            'defaultPolicySubmission',
+            policySubmission && cloneDeep(policySubmission)
+          );
+
+          const defaultEngineValues = policySubmission.engines;
+
+          Object.keys(defaultEngineValues).forEach((defaultEngineKey) =>
+            this.set(defaultEngineKey, defaultEngineValues[defaultEngineKey] === 'on')
+          );
+
+          this.set('policiesHaveBeenObtained', true);
+        })
+        .catch((err) => {
+          this.set('policiesHaveBeenObtained', false);
+          outerThis.set(
+            'gettingPoliciesErrorMessage',
+            `Failed to Get Policies: ${
+              (err &&
+                (err.detail || err.message || err.err || err.title || err.description)) ||
+              'Unknown Reason'
+            }`
+          );
+        })
+        .finally(() => {
+          this.set('getPoliciesIsRunning', false);
+          outerThis.get('block').notifyPropertyChange('data');
+          setTimeout(() => {
+            outerThis.set('activeTab', 'endpoints');
+            outerThis.set('gettingPoliciesMessage', '');
+            outerThis.set('gettingPoliciesErrorMessage', '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }, 5000);
+        });
+    },
     actions: {
       changeTab: function (tabName) {
         this.set('activeTab', tabName);
+        if (tabName === 'editPolicy' && !this.get('policiesHaveBeenObtained'))
+          this.getPolicies();
+      },
+      retryLookup: function () {
+        this.set('running', true);
+        this.set('errorMessage', '');
+        this.sendIntegrationMessage({
+          action: 'retryLookup',
+          data: { entity: this.get('block.entity') }
+        })
+          .then((result) => {
+            if (result.data.summary) this.set('summary', result.summary);
+            this.set('block.data', result.data);
+            this.initializeFields();
+          })
+          .catch((err) => {
+            this.set('details.errorMessage', JSON.stringify(err, null, 4));
+          })
+          .finally(() => {
+            this.set('running', false);
+            this.get('block').notifyPropertyChange('data');
+
+          });
       },
       connectOrDisconnectEndpoint: function (agent, index) {
         const outerThis = this;
@@ -387,7 +484,10 @@ polarity.export = PolarityComponent.extend(
 
         this.sendIntegrationMessage({
           action: 'connectOrDisconnectEndpoint',
-          data: { id: agent.id, networkStatus: agent.networkStatus }
+          data: {
+            id: agent.id,
+            networkStatus: agent.networkStatus
+          }
         })
           .then(({ networkStatus }) => {
             outerThis.setMessages(
@@ -541,7 +641,7 @@ polarity.export = PolarityComponent.extend(
           newValue === 'global'
             ? this.get('details.globalPolicy')
             : this.get(`endpointToEditPolicyOn.${newValue}Policy`) ||
-              policySubmissionDefaults;
+              cloneDeep(policySubmissionDefaults);
 
         this.set('policySubmission', newPolicy);
         this.set('defaultPolicySubmission', newPolicy && cloneDeep(newPolicy));

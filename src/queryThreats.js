@@ -4,169 +4,143 @@ const {
   getOr,
   join,
   eq,
-  concat,
   find,
   uniqBy,
   filter,
   map,
   flow,
   chunk,
-  flatten
+  flatten,
+  size,
+  toLower,
+  includes
 } = require('lodash/fp');
+const { MAX_PAGE_SIZE } = require('./constants');
 
-const queryThreats = async (
-  entity,
-  [currentAgent, ...foundAgents],
-  options,
-  requestWithDefaults,
-  Logger,
-  nextCursor,
-  aggThreats = []
-) => {
-  const { data, pagination } = await getThreats(
-    entity,
-    nextCursor,
-    currentAgent,
-    options,
-    requestWithDefaults
-  );
+const MAX_THREAT_PARALLEL_PROCESS_SIZE = 5;
 
-  let foundThreats = flow(concat(data), uniqBy('id'))(aggThreats);
+const entityTypeToFilterKey = ({ isIP, isHash }) =>
+  isIP ? 'filePath__contains' : isHash ? 'contentHashes' : 'threatDetails__contains';
 
-  foundThreats = flatten(
-    await Promise.all(
-      flow(
-        chunk(19),
-        map(
-          async (foundThreatsChunk) =>
-            await addBlocklistInfoToThreats(
-              foundThreatsChunk,
-              options,
-              requestWithDefaults
-            )
-        )
-      )(foundThreats)
-    )
-  );
-
-  if (get('nextCursor', pagination)) {
-    return await queryThreats(
-      entity,
-      currentAgent ? [currentAgent].concat(foundAgents || []) : [],
-      options,
-      requestWithDefaults,
-      Logger,
-      get('nextCursor', pagination),
-      foundThreats
-    );
-  }
-
-  if (currentAgent) {
-    return await queryThreats(
-      entity,
-      foundAgents,
-      options,
-      requestWithDefaults,
-      Logger,
-      get('nextCursor', pagination),
-      foundThreats
-    );
-  }
-
-  Logger.trace({ foundThreats, entity }, 'Found Threats For Entity');
-  
-  return uniqBy('id', foundThreats);
-};
-
-const getThreats = async (
-  entity,
-  nextCursor,
-  currentAgent,
-  options,
-  requestWithDefaults
-) =>
-  getOr(
-    { data: [], pagination: {} },
+const queryThreats = async (entity, options, requestWithDefaults, Logger) => {
+  const {
+    data,
+    pagination: { totalItems: foundThreatsCount }
+  } = await getOr(
+    { data: [], pagination: { totalItems: 0 } },
     'body',
     await requestWithDefaults({
       method: 'GET',
       url: `${options.url}/web/api/v2.1/threats`,
       qs: {
-        ...(nextCursor
-          ? { cursor: nextCursor }
-          : { query: getOr(entity.value, 'computerName', currentAgent) }),
-        limit: 100
+        // query: entity.value,
+        [entityTypeToFilterKey(entity)]: flow(get('value'), toLower)(entity),
+        limit: MAX_PAGE_SIZE
       },
-      headers: {
-        Authorization: `ApiToken ${options.apiToken}`
-      },
+      options,
       json: true
     })
   );
 
+  let foundThreats = uniqBy('id', data);
+
+  if(flow(get('queryType.value'), includes('Blocklist'))(options)) {
+    const foundThreatWithBlocklistInfo = await batchAddBlocklistInfoToThreats(
+      foundThreats,
+      options,
+      requestWithDefaults,
+      Logger
+    );
+
+    foundThreats = foundThreatWithBlocklistInfo;
+  }
+
+  Logger.trace(
+    { foundThreats, foundThreatsCount, entity },
+    'Found Threats For Entity'
+  );
+
+  return {
+    foundThreats,
+    foundThreatsCount
+  };
+};
+
+const batchAddBlocklistInfoToThreats = async (
+  foundThreats,
+  options,
+  requestWithDefaults,
+  Logger
+) =>
+  flatten(
+    await Promise.all(
+      flow(
+        chunk(MAX_THREAT_PARALLEL_PROCESS_SIZE),
+        map(
+          async (foundThreatsChunk) =>
+            await addBlocklistInfoToThreats(
+              foundThreatsChunk,
+              options,
+              requestWithDefaults,
+              Logger
+            )
+        )
+      )(foundThreats)
+    )
+  );
 const addBlocklistInfoToThreats = async (
   foundThreats,
   options,
   requestWithDefaults,
-  nextCursor,
-  allBlacklistResults = []
+  Logger
 ) => {
-  if (!nextCursor) {
-    foundThreats = map(
-      (threat) => ({
-        ...threat,
-        hash: getPossiblePaths(
-          ['threatInfo.md5', 'threatInfo.sha1', 'threatInfo.sha256'],
-          threat
-        )
-      }),
-      foundThreats
-    );
-  }
+  foundThreats = map(
+    (threat) => ({
+      ...threat,
+      hash: getPossiblePaths(
+        ['threatInfo.md5', 'threatInfo.sha1', 'threatInfo.sha256'],
+        threat
+      )
+    }),
+    foundThreats
+  );
 
-  const { data, pagination } = getOr(
-    { data: [], pagination: {} },
-    'body',
+  const value__contains = flow(
+    map(flow(get('hash'), (hash) => `"${hash}"`)),
+    join(',')
+  )(foundThreats);
+
+  const blocklistData = getOr(
+    [],
+    'body.data',
     await requestWithDefaults({
       method: 'GET',
       url: `${options.url}/web/api/v2.1/restrictions`,
       qs: {
-        ...(nextCursor
-          ? { cursor: nextCursor }
-          : {
-              value__contains: flow(
-                map(flow(get('hash'), (hash) => `"${hash}"`)),
-                join(',')
-              )(foundThreats)
-            }),
+        value__contains,
         includeChildren: true,
         includeParents: true,
-        limit: 100
+        limit: MAX_PAGE_SIZE * MAX_THREAT_PARALLEL_PROCESS_SIZE
       },
-      headers: {
-        Authorization: `ApiToken ${options.apiToken}`
-      },
+      options,
       json: true
     })
   );
 
-  const foundBlocklistItems = flow(concat(data), uniqBy('id'))(allBlacklistResults);
-
-  if (get('nextCursor', pagination)) {
-    return await addBlocklistInfoToThreats(
-      foundThreats,
-      options,
-      requestWithDefaults,
-      get('nextCursor', pagination),
-      foundBlocklistItems
-    );
-  }
+  const foundBlocklistItems = uniqBy('id', blocklistData);
 
   const foundThreatsWithBlocklistInfo = flow(
-    map((threat) => ({
-      ...threat,
-      blocklistInfo: filter(flow(get('value'), eq(threat.hash)), foundBlocklistItems)
-    }))
+    map((threat) => {
+      const blocklistInfo = filter(
+        flow(get('value'), eq(threat.hash)),
+        foundBlocklistItems
+      );
+      return {
+        ...threat,
+        blocklistInfo,
+        blocklistInfoCount: size(blocklistInfo)
+      };
+    })
   )(foundThreats);
 
   return foundThreatsWithBlocklistInfo;

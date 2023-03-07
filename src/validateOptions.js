@@ -1,5 +1,7 @@
-const fp = require('lodash/fp');
+const { includes, isEmpty, flow, get, negate } = require('lodash/fp');
+const { and } = require('./dataTransformations');
 const reduce = require('lodash/fp/reduce').convert({ cap: false });
+
 
 const validateOptions = (options, callback) => {
   const stringOptionsErrorMessages = {
@@ -30,19 +32,30 @@ const validateOptions = (options, callback) => {
         }
       : [];
 
+  const mustSearchBlocklistError = and(
+    flow(get('queryType.value.value'), negate(includes('Blocklists'))),
+    get('allowAddingThreatsToBlocklist.value')
+  )(options)
+    ? {
+        key: 'allowAddingThreatsToBlocklist',
+        message: 'Adding Threats to Blocklist is only possible if your `Query Type` includes "Blocklists".'
+      }
+    : [];
+
   callback(
     null,
     stringValidationErrors
       .concat(urlValidationError)
       .concat(endpointDisplayFieldsError)
       .concat(threatDisplayFieldsError)
+      .concat(mustSearchBlocklistError)
   );
 };
 
 const _validateStringOptions = (stringOptionsErrorMessages, options, otherErrors = []) =>
   reduce((agg, message, optionName) => {
     const isString = typeof options[optionName].value === 'string';
-    const isEmptyString = isString && fp.isEmpty(options[optionName].value);
+    const isEmptyString = isString && isEmpty(options[optionName].value);
 
     return !isString || isEmptyString
       ? agg.concat({

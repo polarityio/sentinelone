@@ -1,4 +1,4 @@
-const { map, flow, get, filter, join, capitalize, eq, size } = require('lodash/fp');
+const { map, flow, get, filter, join, capitalize, eq, size, uniq, includes } = require('lodash/fp');
 
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
@@ -10,7 +10,7 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Threat Details',
     path: 'threatInfo.threatName',
-    link: ({ threatInfo: { threatId }, url }) =>
+    link: ({ threatInfo: { threatId } }, { url }) =>
       `${url}/incidents/threats/${threatId}/overview`
   },
   {
@@ -21,9 +21,27 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
   { label: 'Analyst Verdict', path: 'threatInfo.analystVerdictDescription' },
   { label: 'Incident Status', path: 'threatInfo.incidentStatusDescription' },
   {
+    label: 'Found in Blocklist',
+    path: 'blocklistInfoCount',
+    process: (blocklistInfoCount, options) =>
+      flow(get('queryType.value'), includes('Blocklist'))(options)
+        ? blocklistInfoCount
+          ? `Yes (${blocklistInfoCount})`
+          : 'No'
+        : undefined
+  },
+  {
+    label: 'Blocklist Scope',
+    path: 'blocklistInfo',
+    process: (blocklistInfo) =>
+      blocklistInfo && size(blocklistInfo)
+        ? flow(map(flow(get('scopeName'), capitalize)), uniq, join(', '))(blocklistInfo)
+        : undefined
+  },
+  {
     label: 'Endpoints',
     path: 'agentRealtimeInfo.agentComputerName',
-    link: ({ agentRealtimeInfo: { agentComputerName }, url }) =>
+    link: ({ agentRealtimeInfo: { agentComputerName } }, { url }) =>
       `${url}/sentinels/devices?page=1&filter={"computerName__contains":"\"${agentComputerName}\""}`
   },
   {
@@ -59,20 +77,6 @@ const THREAT_DISPLAY_FIELD_PROCESSING = [
         map(flow(get('action'), capitalize)),
         join(', ')
       )(mitigationStatuses)
-  },
-  {
-    label: 'Found in Blocklist',
-    path: 'blocklistInfo',
-    process: (blocklistInfo) =>
-      blocklistInfo && size(blocklistInfo) ? `Yes (${size(blocklistInfo)})` : 'No'
-  },
-  {
-    label: 'Blocklist Scope',
-    path: 'blocklistInfo',
-    process: (blocklistInfo) =>
-      blocklistInfo && size(blocklistInfo)
-        ? flow(map(flow(get('scopeName'), capitalize)), join(', '))(blocklistInfo)
-        : undefined
   },
   {
     label: 'Pending Actions',
@@ -173,7 +177,7 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Endpoint Name',
     path: 'computerName',
-    link: ({ computerName, url }) =>
+    link: ({ computerName }, { url }) =>
       `${url}/sentinels/devices?page=1&filter={"computerName__contains":"\"${computerName}\""}`
   },
   { label: 'Account', path: 'accountName' },
@@ -281,12 +285,16 @@ const ENDPOINT_DISPLAY_FIELD_PROCESSING = [
   {
     label: 'Locations',
     path: 'locations',
-    process: (locations) => locations ? locations.map(({ name }) => name).join(', ') : 'N/A'
+    process: (locations) =>
+      locations ? locations.map(({ name }) => name).join(', ') : 'N/A'
   }
 ];
+
+const MAX_PAGE_SIZE = 30;
 
 module.exports = {
   IGNORED_IPS,
   THREAT_DISPLAY_FIELD_PROCESSING,
-  ENDPOINT_DISPLAY_FIELD_PROCESSING
+  ENDPOINT_DISPLAY_FIELD_PROCESSING,
+  MAX_PAGE_SIZE
 };

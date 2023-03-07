@@ -1,7 +1,13 @@
 const { getOr } = require('lodash/fp');
 
 const addThreatToBlocklist = async (
-  { id: threatId, previousNumberOfBlocklistItems, targetScope, foundInBlocklist, blocklistScope },
+  {
+    id: threatId,
+    previousNumberOfBlocklistItems,
+    targetScope,
+    foundInBlocklist,
+    blocklistScope
+  },
   options,
   requestWithDefaults,
   callback,
@@ -25,10 +31,11 @@ const addThreatToBlocklist = async (
       method: 'POST',
       url: `${options.url}/web/api/v2.1/threats/add-to-blacklist`,
       headers: {
-        Authorization: `ApiToken ${options.apiToken}`,
         'Content-Type': 'application/json'
       },
       body: { filter: { ids: [threatId] }, data: { targetScope } },
+      options,
+      onMessage: true,
       json: true
     });
 

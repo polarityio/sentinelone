@@ -1,11 +1,22 @@
 const fs = require('fs');
-const { identity } = require('lodash/fp');
+const { identity, isEmpty, getOr } = require('lodash/fp');
 const request = require('postman-request');
 const config = require('../config/config');
 const { parseErrorToReadableJSON } = require('./dataTransformations');
+const Bottleneck = require('bottleneck/es5');
 
 const _configFieldIsValid = (field) => typeof field === 'string' && field.length > 0;
 
+let limiter;
+
+function _setupLimiter(options) {
+  limiter = new Bottleneck({
+    maxConcurrent: Number.parseInt(options.maxConcurrent, 10), // no more than 5 lookups can be running at single time
+    highWater: 50, // no more than 50 lookups can be queued up
+    strategy: Bottleneck.strategy.OVERFLOW,
+    minTime: Number.parseInt(options.minTime, 10) // don't run lookups faster than 1 every options.minTime ms
+  });
+}
 const createRequestWithDefaults = (Logger) => {
   const {
     request: { ca, cert, key, passphrase, rejectUnauthorized, proxy }
@@ -38,6 +49,8 @@ const createRequestWithDefaults = (Logger) => {
       });
 
     return async (requestOptions) => {
+      if (!limiter) _setupLimiter(requestOptions.options);
+
       const preRequestFunctionResults = await preRequestFunction(requestOptions);
       const _requestOptions = {
         ...requestOptions,
@@ -45,8 +58,10 @@ const createRequestWithDefaults = (Logger) => {
       };
 
       let postRequestFunctionResults;
+      let result;
       try {
-        const result = await _requestWithDefault(_requestOptions);
+        result = await limiter.schedule(_requestWithDefault, _requestOptions);
+
         checkForStatusError(result, _requestOptions);
 
         postRequestFunctionResults = await postRequestSuccessFunction(
@@ -54,10 +69,22 @@ const createRequestWithDefaults = (Logger) => {
           _requestOptions
         );
       } catch (error) {
-        postRequestFunctionResults = await postRequestFailureFunction(
-          error,
-          _requestOptions
-        );
+        try {
+          postRequestFunctionResults = await postRequestFailureFunction(
+            error,
+            _requestOptions
+          );
+        } catch (_error) {
+          const err = parseErrorToReadableJSON(_error);
+          _error.maxRequestQueueLimitHit =
+            (isEmpty(err) && isEmpty(result)) ||
+            (err && err.message === 'This job has been dropped by Bottleneck');
+
+          _error.isConnectionReset =
+            getOr('', 'errors[0].meta.err.code', err) === 'ECONNRESET';
+          _error.entity = JSON.stringify(_requestOptions.entity);
+          throw _error;
+        }
       }
       return postRequestFunctionResults;
     };
@@ -79,34 +106,44 @@ const createRequestWithDefaults = (Logger) => {
     }
   };
 
-  const requestDefaultsWithInterceptors = requestWithDefaults(identity, identity, (error, requestOptions) => {
-    const err = parseErrorToReadableJSON(error);
-    if(err.status === 500) {
-      Logger.error(
-        { requestOptions, err },
-        'Received a 500 from the service on this Request'
-      );
-      return;
-    }
-    if(err.status === 401) {
-      Logger.error(
-        { requestOptions, err },
-        'Received a 401 from the service on this Request'
-      );
-      const formattedError = new Error('Authentication Failed');
-      formattedError.description =
-        "Your API Token provided in the User Options for this integration isn't recognized by SentinelOne.";
-      formattedError.status = err.status;
-      formattedError.SentinelOneResponseBody = err.description;
-      formattedError.stack = err.stack;
-      
-      throw formattedError;
-    }
+  const requestDefaultsWithInterceptors = requestWithDefaults(
+    (requestOptions) => ({
+      ...requestOptions,
+      headers: {
+        ...requestOptions.headers,
+        Authorization: `ApiToken ${requestOptions.options.apiToken}`
+      }
+    }),
+    identity,
+    (error, requestOptions) => {
+      const err = parseErrorToReadableJSON(error);
+      if (err.status === 500) {
+        Logger.error(
+          { requestOptions, err },
+          'Received a 500 from the service on this Request'
+        );
+        return;
+      }
+      if (err.status === 401) {
+        Logger.error(
+          { requestOptions, err },
+          'Received a 401 from the service on this Request'
+        );
+        const formattedError = new Error('Authentication Failed');
+        formattedError.description =
+          "Your API Token provided in the User Options for this integration isn't recognized by SentinelOne.";
+        formattedError.status = err.status;
+        formattedError.SentinelOneResponseBody = err.description;
+        formattedError.stack = err.stack;
 
-    throw error;
-  });
+        throw formattedError;
+      }
 
-  return requestDefaultsWithInterceptors
+      throw error;
+    }
+  );
+
+  return requestDefaultsWithInterceptors;
 };
 
 module.exports = createRequestWithDefaults;

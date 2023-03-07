@@ -1,11 +1,12 @@
 {
   "main": "./integration.js",
   "name": "sentinelone",
-  "version": "3.0.7-beta",
+  "version": "3.0.8-beta",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
   "dependencies": {
+    "bottleneck": "^2.19.5",
     "lodash": "^4.17.15",
     "postman-request": "^2.88.1-postman.31"
   }
