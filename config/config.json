@@ -1,4 +1,5 @@
 {
+  "polarityIntegrationUuid": "fa3c5800-cce1-11ed-aeee-075d3490155d",
   "name": "SentinelOne",
   "acronym": "S1",
   "description": "Polarity's SentinelOne integration allows automated queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  This integration allows you to Connect and Disconnect Endpoints from your Network, Add Threats to the Blocklist, and Edit Policy Settings.",
