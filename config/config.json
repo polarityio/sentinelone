@@ -3,20 +3,13 @@
   "name": "SentinelOne",
   "acronym": "S1",
   "description": "Polarity's SentinelOne integration allows automated queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  This integration allows you to Connect and Disconnect Endpoints from your Network, Add Threats to the Blocklist, and Edit Policy Settings.",
-  "entityTypes": ["IPv4", "IPv6", "domain", "hash"],
+  "entityTypes": ["IPv4", "IPv6", "domain", "MD5", "SHA1", "SHA256"],
   "defaultColor": "light-purple",
   "onDemandOnly": true,
   "styles": ["./styles/styles.less"],
   "block": {
     "component": { "file": "./components/block.js" },
     "template": { "file": "./templates/block.hbs" }
-  },
-  "request": {
-    "cert": "",
-    "key": "",
-    "passphrase": "",
-    "ca": "",
-    "proxy": ""
   },
   "logging": { "level": "info" },
   "options": [

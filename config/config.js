@@ -6,7 +6,7 @@ module.exports = {
     'queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  ' +
     'This integration allows you to Connect and Disconnect Endpoints from your Network, ' +
     'Add Threats to the Blocklist, and Edit Policy Settings.',
-  entityTypes: ['IPv4', 'IPv6', 'domain', 'hash'],
+  entityTypes: ['IPv4', 'IPv6', 'domain', 'MD5', 'SHA1', 'SHA256'],
   defaultColor: 'light-purple',
   onDemandOnly: true,
   styles: ['./styles/styles.less'],
@@ -23,7 +23,7 @@ module.exports = {
     key: '',
     passphrase: '',
     ca: '',
-    proxy: ""
+    proxy: ''
   },
   logging: {
     level: 'info' //trace, debug, info, warn, error, fatal
