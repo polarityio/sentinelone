@@ -3,7 +3,30 @@
   "name": "SentinelOne",
   "acronym": "S1",
   "description": "Polarity's SentinelOne integration allows automated queries of Endpoints and Threats using IP Addresses, URLs, Domains, and Hashes.  This integration allows you to Connect and Disconnect Endpoints from your Network, Add Threats to the Blocklist, and Edit Policy Settings.",
+  "dataTypes": [
+    "IPv4",
+    "IPv6",
+    "domain",
+    "MD5",
+    "SHA1",
+    "SHA256",
+    {
+      "type": "custom",
+      "name": "Hostname",
+      "description": "Matches on possible Hostnames lookups which can be a single search term between 2 and 64 characters using A-Z, 0-9, and underscores, and dashes.",
+      "editable": true,
+      "enabled": false,
+      "key": "hostname",
+      "regex": "\\b[a-zA-Z_0-9\\-]{2,64}\\b"
+    }
+  ],
   "entityTypes": ["IPv4", "IPv6", "domain", "MD5", "SHA1", "SHA256"],
+  "customTypes": [
+    {
+      "key": "hostname",
+      "regex": "\\b[a-zA-Z_0-9\\-]{2,64}\\b"
+    }
+  ],
   "defaultColor": "light-purple",
   "onDemandOnly": true,
   "styles": ["./styles/styles.less"],
