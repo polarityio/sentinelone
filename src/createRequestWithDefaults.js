@@ -1,11 +1,8 @@
 const fs = require('fs');
 const { identity, isEmpty, getOr } = require('lodash/fp');
 const request = require('postman-request');
-const config = require('../config/config');
 const { parseErrorToReadableJSON } = require('./dataTransformations');
 const Bottleneck = require('bottleneck/es5');
-
-const _configFieldIsValid = (field) => typeof field === 'string' && field.length > 0;
 
 let limiter;
 
@@ -18,19 +15,6 @@ function _setupLimiter(options) {
   });
 }
 const createRequestWithDefaults = (Logger) => {
-  const {
-    request: { ca, cert, key, passphrase, rejectUnauthorized, proxy }
-  } = config;
-
-  const defaults = {
-    ...(_configFieldIsValid(ca) && { ca: fs.readFileSync(ca) }),
-    ...(_configFieldIsValid(cert) && { cert: fs.readFileSync(cert) }),
-    ...(_configFieldIsValid(key) && { key: fs.readFileSync(key) }),
-    ...(_configFieldIsValid(passphrase) && { passphrase }),
-    ...(_configFieldIsValid(proxy) && { proxy }),
-    ...(typeof rejectUnauthorized === 'boolean' && { rejectUnauthorized })
-  };
-
   const requestWithDefaults = (
     preRequestFunction = async () => ({}),
     postRequestSuccessFunction = async (x) => x,
@@ -38,7 +22,7 @@ const createRequestWithDefaults = (Logger) => {
       throw e;
     }
   ) => {
-    const defaultsRequest = request.defaults(defaults);
+    const defaultsRequest = request.defaults({ json: true });
 
     const _requestWithDefault = (requestOptions) =>
       new Promise((resolve, reject) => {
