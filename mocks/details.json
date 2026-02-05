@@ -1,0 +1,311 @@
+{
+  "agents": [
+    {
+      "Endpoint Name": {
+        "value": "DESKTOP-ABC123",
+        "link": "https://sentinelone.example.com/sentinels/devices?page=1&filter={\"computerName__contains\":\"\\\"DESKTOP-ABC123\\\"\"}"
+      },
+      "Account": {
+        "value": "Corporate"
+      },
+      "Site": {
+        "value": "New York Office"
+      },
+      "Last Logged In User": {
+        "value": "John.Doe"
+      },
+      "Group": {
+        "value": "Engineering"
+      },
+      "Domain": {
+        "value": "corporate.local"
+      },
+      "Console Visible IP": {
+        "value": "203.0.113.45"
+      },
+      "Is Decommissioned": {
+        "value": false
+      },
+      "Agent Version": {
+        "value": "23.1.2.456"
+      },
+      "Last Active": {
+        "value": "2024-01-15T14:32:18.000Z",
+        "date": true
+      },
+      "Registered On": {
+        "value": "2023-06-12T09:15:42.000Z",
+        "date": true
+      },
+      "Health Status": {
+        "value": "Infected"
+      },
+      "Device Type": {
+        "value": "Desktop"
+      },
+      "OS": {
+        "value": "Windows"
+      },
+      "OS Version": {
+        "value": "Windows 10 Pro"
+      },
+      "Architecture": {
+        "value": "x86_64"
+      },
+      "Memory": {
+        "value": "16 GB"
+      },
+      "CPU Count": {
+        "value": 8
+      },
+      "Core Count": {
+        "value": 4
+      },
+      "MAC Address": {
+        "value": "00:1A:2B:3C:4D:5E"
+      },
+      "Management Connectivity": {
+        "value": "Online"
+      },
+      "Network Status": {
+        "value": "Connected"
+      },
+      "Update Status": {
+        "value": "Up to date"
+      },
+      "Full Disk Scan": {
+        "value": "Completed"
+      },
+      "IP Addresses": {
+        "value": "192.168.1.100"
+      },
+      "Pending Uninstall": {
+        "value": "None"
+      },
+      "Pending Threat Reboot": {
+        "value": "None"
+      },
+      "Disk Encryption": {
+        "value": "On"
+      },
+      "Vulnerability Status": {
+        "value": "Up to date"
+      },
+      "Firewall Status": {
+        "value": "Enabled"
+      }
+    },
+    {
+      "Endpoint Name": {
+        "value": "LAPTOP-XYZ789",
+        "link": "https://sentinelone.example.com/sentinels/devices?page=1&filter={\"computerName__contains\":\"\\\"LAPTOP-XYZ789\\\"\"}"
+      },
+      "Account": {
+        "value": "Corporate"
+      },
+      "Health Status": {
+        "value": "Healthy"
+      },
+      "Device Type": {
+        "value": "Laptop"
+      },
+      "OS": {
+        "value": "MacOS"
+      },
+      "Agent Version": {
+        "value": "23.1.2.456"
+      },
+      "Management Connectivity": {
+        "value": "Online"
+      },
+      "Network Status": {
+        "value": "Connected"
+      }
+    }
+  ],
+  "threats": [
+    {
+      "Status": {
+        "value": "Mitigated"
+      },
+      "Threat Details": {
+        "value": "Trojan.GenericKD.12345678",
+        "link": "https://sentinelone.example.com/incidents/threats/1234567890123456789/overview"
+      },
+      "AI Confidence Level": {
+        "value": "Malicious",
+        "capitalize": true
+      },
+      "Analyst Verdict": {
+        "value": "True Positive"
+      },
+      "Incident Status": {
+        "value": "Unresolved"
+      },
+      "Endpoints": {
+        "value": "DESKTOP-ABC123",
+        "link": "https://sentinelone.example.com/sentinels/devices?page=1&filter={\"computerName__contains\":\"\\\"DESKTOP-ABC123\\\"\"}"
+      },
+      "EndPoint IPv4 Address": {
+        "value": "192.168.1.100"
+      },
+      "External IP Address": {
+        "value": "203.0.113.45"
+      },
+      "Reported Time": {
+        "value": "2024-01-15T14:25:33.000Z",
+        "date": true
+      },
+      "Identifying Time": {
+        "value": "2024-01-15T14:25:31.000Z",
+        "date": true
+      },
+      "Detecting Engine": {
+        "value": "Behavioral AI"
+      },
+      "Initiated By": {
+        "value": "Agent Policy"
+      },
+      "Classification": {
+        "value": "Trojan"
+      },
+      "Agent Version On Detection": {
+        "value": "23.1.2.456"
+      },
+      "Hash": {
+        "value": "5d41402abc4b2a76b9719d911017c592"
+      },
+      "Path": {
+        "value": "C:\\Users\\John.Doe\\Downloads\\malware.exe"
+      },
+      "Completed Actions": {
+        "value": "Quarantine, Kill"
+      },
+      "Pending Actions": {
+        "value": "No"
+      },
+      "Reboot Required": {
+        "value": "No"
+      },
+      "Failed Actions": {
+        "value": "No"
+      },
+      "Policy At Detection": {
+        "value": "Protect"
+      },
+      "Mitigated Preemptivley": {
+        "value": "Yes"
+      },
+      "Accounts": {
+        "value": "Corporate"
+      },
+      "Site": {
+        "value": "New York Office"
+      },
+      "Group": {
+        "value": "Engineering"
+      },
+      "Originating Process": {
+        "value": "Explorer.exe"
+      }
+    },
+    {
+      "Status": {
+        "value": "In Progress"
+      },
+      "Threat Details": {
+        "value": "Ransomware.Cryptolocker.Variant",
+        "link": "https://sentinelone.example.com/incidents/threats/9876543210987654321/overview"
+      },
+      "AI Confidence Level": {
+        "value": "Malicious",
+        "capitalize": true
+      },
+      "Analyst Verdict": {
+        "value": "Suspicious"
+      },
+      "Incident Status": {
+        "value": "Unresolved"
+      },
+      "Endpoints": {
+        "value": "DESKTOP-ABC123",
+        "link": "https://sentinelone.example.com/sentinels/devices?page=1&filter={\"computerName__contains\":\"\\\"DESKTOP-ABC123\\\"\"}"
+      },
+      "Classification": {
+        "value": "Ransomware"
+      },
+      "Hash": {
+        "value": "098f6bcd4621d373cade4e832627b4f6"
+      },
+      "Path": {
+        "value": "C:\\Windows\\Temp\\payload.dll"
+      },
+      "Pending Actions": {
+        "value": "Yes"
+      }
+    }
+  ],
+  "unformattedAgents": [
+    {
+      "id": "1234567890123456789",
+      "computerName": "DESKTOP-ABC123",
+      "domain": "corporate.local",
+      "infected": true,
+      "isActive": true,
+      "isDecommissioned": false,
+      "agentVersion": "23.1.2.456",
+      "osType": "windows",
+      "osName": "Windows 10 Pro",
+      "externalIp": "203.0.113.45",
+      "lastActiveDate": "2024-01-15T14:32:18.000Z",
+      "accountName": "Corporate",
+      "siteName": "New York Office",
+      "groupName": "Engineering",
+      "machineType": "desktop",
+      "networkStatus": "connected",
+      "scanStatus": "finished",
+      "totalMemory": 16000,
+      "cpuCount": 8,
+      "coreCount": 4,
+      "debugData": "internal_use_only",
+      "rawApiTimestamp": "2024-01-15T14:35:00Z"
+    }
+  ],
+  "unformattedThreats": [
+    {
+      "id": "1234567890123456789",
+      "threatInfo": {
+        "threatId": "1234567890123456789",
+        "threatName": "Trojan.GenericKD.12345678",
+        "classification": "Trojan",
+        "confidenceLevel": "malicious",
+        "incidentStatusDescription": "unresolved",
+        "mitigationStatusDescription": "mitigated",
+        "md5": "5d41402abc4b2a76b9719d911017c592",
+        "filePath": "C:\\Users\\John.Doe\\Downloads\\malware.exe",
+        "createdAt": "2024-01-15T14:25:33.000Z",
+        "identifiedAt": "2024-01-15T14:25:31.000Z"
+      },
+      "agentRealtimeInfo": {
+        "agentComputerName": "DESKTOP-ABC123"
+      },
+      "agentDetectionInfo": {
+        "agentIpV4": "192.168.1.100",
+        "externalIp": "203.0.113.45",
+        "agentVersion": "23.1.2.456",
+        "accountName": "Corporate",
+        "siteName": "New York Office"
+      },
+      "internalMetadata": {
+        "processingTime": 125,
+        "correlationId": "abc-123-def-456"
+      }
+    }
+  ],
+  "maxPageSize": 30,
+  "debugInfo": {
+    "queryExecutionTime": 345,
+    "apiVersion": "v2.1",
+    "internalId": "debug-12345"
+  }
+}
